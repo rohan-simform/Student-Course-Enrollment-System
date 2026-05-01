@@ -4,62 +4,68 @@ require_once __DIR__ . '/../helpers/AuthHelper.php';
 require_once __DIR__ . '/../classes/Course.php';
 require_once __DIR__ . '/../classes/Enrollment.php';
 
+/**
+ * Handles role-based permission checks.
+ */
 class Permission
 {
+    /**
+     * Database connection instance.
+     *
+     * @var mysqli
+     */
     private static $db;
 
+    /**
+     * Initialize permission system with database connection.
+     *
+     * @param mysqli $db
+     * @return void
+     */
     public static function init($db)
     {
         self::$db = $db;
     }
 
+    /**
+     * Static permission map by role.
+     *
+     * @var array
+     */
     private static $permissions = [
-        'admin' => [
-            'user.create',
-            'user.read',
-            'user.update',
-            'user.delete',
-            'course.create',
-            'course.update',
-            'course.delete',
-            'course.assign',
-            'course.enroll',
-            'enrollment.update',
-            'enrollment.cancel'
+        ROLE_ADMIN => [
+            'user.create','user.read','user.update','user.delete',
+            'course.create','course.update','course.delete','course.assign','course.enroll',
+            'enrollment.update','enrollment.cancel'
         ],
 
-        'instructor' => [
-            'user.read',
-            'user.update',
-            'course.read',
-            'course.update',
-            'course.enroll',
-            'enrollment.update',
-            'enrollment.cancel',
-            'enrollment.view',
-            'instructor.view',
-            'student.view',
-            'student.delete'
+        ROLE_INSTRUCTOR => [
+            'user.read','user.update',
+            'course.read','course.update','course.enroll',
+            'enrollment.update','enrollment.cancel','enrollment.view',
+            'instructor.view','student.view','student.delete'
         ],
 
-        'student' => [
-            'user.read',
-            'user.update',
-            'course.read',
-            'enrollment.view',
-            'instructor.view'
+        ROLE_STUDENT => [
+            'user.read','user.update',
+            'course.read','enrollment.view','instructor.view'
         ],
     ];
 
+    /**
+     * Resource ownership resolvers by role.
+     *
+     * @var array
+     */
     private static $resolvers = [
-        'instructor' => [
+        ROLE_INSTRUCTOR => [
             'user'        => 'isSelf',
             'course'      => ['model' => 'Course',     'method' => 'hasInstructor'],
             'enrollment'  => ['model' => 'Enrollment', 'method' => 'hasInstructor'],
             'instructor'  => 'isSelf',
             'student'     => ['model' => 'Enrollment', 'method' => 'studentUnderInstructor'],
         ],
-        'student' => [
+        ROLE_STUDENT => [
             'user'        => 'isSelf',
             'course'      => ['model' => 'Enrollment', 'method' => 'studentInCourse'],
             'enrollment'  => ['model' => 'Enrollment', 'method' => 'hasStudent'],
@@ -67,6 +73,13 @@ class Permission
         ],
     ];
 
+    /**
+     * Check if current user has permission.
+     *
+     * @param string $permission
+     * @param int|null $resourceId
+     * @return bool
+     */
     public static function check($permission, $resourceId = null) {
         $user = AuthHelper::user();
         if (!$user) return false;
@@ -74,8 +87,8 @@ class Permission
         $role = $user['role'];
         $resource = explode('.', $permission)[0];
 
-        if ($role === 'admin')
-            return in_array($permission, self::$permissions['admin']);
+        if ($role === ROLE_ADMIN)
+            return in_array($permission, self::$permissions[ROLE_ADMIN]);
 
         if (!in_array($permission, self::$permissions[$role] ?? []))
             return false;

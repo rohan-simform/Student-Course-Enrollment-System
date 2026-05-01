@@ -1,6 +1,17 @@
 <?php
+
+/**
+ * Provides reusable input validation methods.
+ */
 class Validator {
 
+    /**
+     * Validate email address.
+     *
+     * @param string $email
+     * @return string
+     * @throws Exception
+     */
     public static function email($email){
         $email = trim($email);
 
@@ -15,6 +26,13 @@ class Validator {
         return $email;
     }
 
+    /**
+     * Validate password.
+     *
+     * @param string $password
+     * @return string
+     * @throws Exception
+     */
     public static function password($password){
         $password = trim($password);
 
@@ -29,6 +47,14 @@ class Validator {
         return $password;
     }
 
+    /**
+     * Validate name field.
+     *
+     * @param string $name
+     * @param string $label
+     * @return string
+     * @throws Exception
+     */
     public static function name($name, $label = "Name"){
         $name = trim($name);
 
@@ -43,6 +69,13 @@ class Validator {
         return $name;
     }
 
+    /**
+     * Validate salary amount.
+     *
+     * @param mixed $salary
+     * @return int
+     * @throws Exception
+     */
     public static function salary($salary){
         if($salary === null){
             throw new Exception("Salary is required");
@@ -55,6 +88,13 @@ class Validator {
         return (int)$salary;
     }
 
+    /**
+     * Validate phone number.
+     *
+     * @param string|null $phone
+     * @return string|null
+     * @throws Exception
+     */
     public static function phone($phone){
         if(empty($phone)){
             return null;
@@ -69,6 +109,15 @@ class Validator {
         return $phone;
     }
 
+    /**
+     * Validate integer value.
+     *
+     * @param mixed $value
+     * @param string $label
+     * @param int $min
+     * @return int
+     * @throws Exception
+     */
     public static function integer($value, $label = "Value", $min = 0){
         if ($value === null || $value === '') {
             throw new Exception("$label is required");
@@ -87,6 +136,14 @@ class Validator {
         return $value;
     }
 
+    /**
+     * Validate status value.
+     *
+     * @param string $value
+     * @param string $label
+     * @return string
+     * @throws Exception
+     */
     public static function status($value, $label = "Status"){
         $allowed = ['active', 'inactive', 'disabled'];
 
@@ -97,8 +154,15 @@ class Validator {
         return $value;
     }
 
+    /**
+     * Validate user role.
+     *
+     * @param string $value
+     * @return string
+     * @throws Exception
+     */
     public static function role($value){
-        $allowed = ['student', 'instructor', 'admin'];
+        $allowed = ROLES;
 
         if (!in_array($value, $allowed, true)) {
             throw new Exception("Invalid role");
