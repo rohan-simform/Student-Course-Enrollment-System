@@ -1,11 +1,11 @@
-<?php 
-require_once __DIR__ . '/../helpers/QueryHelper.php';
+<?php
+
+require_once __DIR__.'/../helpers/QueryHelper.php';
 
 /**
  * Handles enrollment-related database operations.
  */
-class Enrollment{
-
+class Enrollment {
     /**
      * Database connection instance.
      *
@@ -16,37 +16,36 @@ class Enrollment{
     /**
      * Create a new Enrollment instance.
      *
-     * @param mysqli $db Database connection.
+     * @param  mysqli  $db  Database connection.
      */
-    public function __construct($db){
-        $this->conn=$db;
+    public function __construct($db) {
+        $this->conn = $db;
     }
 
     /**
      * Get paginated enrollments with optional filters.
      *
-     * @param string|null $filterBy
-     * @param int|null $filterId
-     * @param int $page
-     * @param int $limit
-     * @param string|string[]|null $status
-     * @param boolean $excludeStatus
+     * @param  string|null  $filterBy
+     * @param  int|null  $filterId
+     * @param  int  $page
+     * @param  int  $limit
+     * @param  string|string[]|null  $status
+     * @param  bool  $excludeStatus
      * @return array
      */
-    public function getEnrollments($filterBy = null, $filterId = null, $page = 1, $limit = 10, $status = null, $excludeStatus = false){
-        $page = max(1, (int)$page);
-        $limit = max(1, (int)$limit);
+    public function getEnrollments($filterBy = null, $filterId = null, $page = 1, $limit = 10, $status = null, $excludeStatus = false) {
+        $page = max(1, (int) $page);
+        $limit = max(1, (int) $limit);
         $offset = ($page - 1) * $limit;
 
         $allowedFilters = ['student_id', 'course_id', 'instructor_id'];
 
         $useFilter = isset($filterId) && isset($filterBy) && in_array($filterBy, $allowedFilters, true);
 
-        // 👇 UPDATED STATUS HANDLING
-        $useStatus = !empty($status);
+        $useStatus = ! empty($status);
         $isArrayStatus = is_array($status);
 
-        $countQuery = "select count(*) as total from enrollments";
+        $countQuery = 'select count(*) as total from enrollments';
         $conditions = [];
         $countParams = [];
         $countTypes = '';
@@ -75,24 +74,19 @@ class Enrollment{
             }
         }
 
-        if (!empty($conditions)) {
-            $countQuery .= " WHERE " . implode(" and ", $conditions);
+        if (! empty($conditions)) {
+            $countQuery .= ' WHERE '.implode(' and ', $conditions);
         }
 
         $stmt = $this->conn->prepare($countQuery);
-        if (!empty($countParams)) {
+        if (! empty($countParams)) {
             $stmt->bind_param($countTypes, ...$countParams);
         }
 
         $stmt->execute();
         $total = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
 
-        /*
-        |-------------------------
-        | MAIN QUERY
-        |-------------------------
-        */
-        $query = "
+        $query = '
             select
                 e.id,
                 e.student_id,
@@ -107,7 +101,7 @@ class Enrollment{
             join students s on e.student_id = s.user_id
             join courses c on e.course_id = c.id
             join instructors i on e.instructor_id = i.user_id
-        ";
+        ';
 
         $queryConditions = [];
         $queryParams = [];
@@ -137,12 +131,12 @@ class Enrollment{
             }
         }
 
-        if (!empty($queryConditions)) {
-            $query .= " WHERE " . implode(" and ", $queryConditions);
+        if (! empty($queryConditions)) {
+            $query .= ' WHERE '.implode(' and ', $queryConditions);
         }
 
-        $query .= " order by e.enrolled_date desc, e.id desc";
-        $query .= " limit ? offset ?";
+        $query .= ' order by e.enrolled_date desc, e.id desc';
+        $query .= ' limit ? offset ?';
 
         $stmt = $this->conn->prepare($query);
 
@@ -156,58 +150,58 @@ class Enrollment{
             $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
             return [
-                "status" => true,
-                "data" => $data,
-                "pagination" => [
-                    "page" => $page,
-                    "limit" => $limit,
-                    "total_rows" => (int)$total,
-                    "total_pages" => $limit > 0 ? ceil($total / $limit) : 0
-                ]
+                'status' => true,
+                'data' => $data,
+                'pagination' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'total_rows' => (int) $total,
+                    'total_pages' => $limit > 0 ? ceil($total / $limit) : 0,
+                ],
             ];
         }
 
         return [
-            "status" => false,
-            "message" => "Execution failed: " . $stmt->error
+            'status' => false,
+            'message' => 'Execution failed: '.$stmt->error,
         ];
     }
 
     /**
      * Get enrollment by student and course.
      *
-     * @param int $studentId
-     * @param int $courseId
+     * @param  int  $studentId
+     * @param  int  $courseId
      * @return array
      */
-    public function getByStudentAndCourse($studentId, $courseId){
-        $query = "
+    public function getByStudentAndCourse($studentId, $courseId) {
+        $query = '
             select *
             from enrollments
             where student_id = ? and course_id = ?
-            limit 1";
+            limit 1';
 
         $stmt = $this->conn->prepare($query);
-        $stmt->bind_param("ii", $studentId, $courseId);
+        $stmt->bind_param('ii', $studentId, $courseId);
         $stmt->execute();
 
         $result = $stmt->get_result()->fetch_assoc();
 
         if ($result) {
-            return ["status" => true, "data" => $result];
+            return ['status' => true, 'data' => $result];
         }
 
-        return ["status" => false, "message" => "Enrollment not found"];
+        return ['status' => false, 'message' => 'Enrollment not found'];
     }
 
     /**
      * Get enrollment by ID.
      *
-     * @param int $id
+     * @param  int  $id
      * @return array
      */
-    public function getById($id){
-        $query = "
+    public function getById($id) {
+        $query = '
             select 
                 e.id,
                 e.student_id,
@@ -223,55 +217,55 @@ class Enrollment{
             join courses c on e.course_id = c.id
             join instructors i on e.instructor_id = i.user_id
             where e.id = ?
-            limit 1";
+            limit 1';
 
         $stmt = $this->conn->prepare($query);
-        $stmt->bind_param("i", $id);
+        $stmt->bind_param('i', $id);
         $stmt->execute();
 
         $result = $stmt->get_result()->fetch_assoc();
 
         if ($result) {
-            return ["status" => true, "data" => $result];
+            return ['status' => true, 'data' => $result];
         }
 
-        return ["status" => false, "message" => "Enrollment not found"];
+        return ['status' => false, 'message' => 'Enrollment not found'];
     }
 
     /**
      * Count active enrollments by course.
      *
-     * @param int $courseId
+     * @param  int  $courseId
      * @return int
      */
-    public function countActiveByCourse($courseId){
+    public function countActiveByCourse($courseId) {
         $query = "
             select count(*) as total
             from enrollments
             where course_id = ? and status = 'active'";
 
         $stmt = $this->conn->prepare($query);
-        $stmt->bind_param("i", $courseId);
+        $stmt->bind_param('i', $courseId);
         $stmt->execute();
 
         $result = $stmt->get_result()->fetch_assoc();
 
-        return (int)$result['total'];
+        return (int) $result['total'];
     }
 
     /**
      * Check if enrollment exists with given statuses.
      *
-     * @param int $studentId
-     * @param int $courseId
-     * @param array|string $statuses
+     * @param  int  $studentId
+     * @param  int  $courseId
+     * @param  array|string  $statuses
      * @return bool
      */
-    public function hasEnrollmentStatus($studentId, $courseId, $statuses){
-        $statuses = (array)$statuses;
+    public function hasEnrollmentStatus($studentId, $courseId, $statuses) {
+        $statuses = (array) $statuses;
 
         $placeholders = implode(',', array_fill(0, count($statuses), '?'));
-        $types = "ii" . str_repeat("s", count($statuses));
+        $types = 'ii'.str_repeat('s', count($statuses));
 
         $query = "
             select 1
@@ -294,26 +288,28 @@ class Enrollment{
     /**
      * Check if enrollment exists by conditions.
      *
-     * @param array $condition
+     * @param  array  $condition
      * @return bool
      */
-    public function exists($condition = []){
+    public function exists($condition = []) {
         $allowedFields = ['id', 'student_id', 'course_id', 'instructor_id', 'status'];
         $clauses = [];
-        $types   = '';
-        $params  = [];
+        $types = '';
+        $params = [];
 
-        foreach($condition as $key => $value){
-            if(in_array($key, $allowedFields, true)){
+        foreach ($condition as $key => $value) {
+            if (in_array($key, $allowedFields, true)) {
                 $clauses[] = "{$key} = ?";
                 $types .= is_int($value) ? 'i' : 's';
                 $params[] = $value;
             }
         }
-        
-        if(empty($clauses)) return false;
 
-        $query = "select 1 from enrollments where " . implode(" and ", $clauses) ." limit 1";
+        if (empty($clauses)) {
+            return false;
+        }
+
+        $query = 'select 1 from enrollments where '.implode(' and ', $clauses).' limit 1';
 
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param($types, ...$params);
@@ -325,15 +321,15 @@ class Enrollment{
     /**
      * Check if instructor owns enrollment.
      *
-     * @param int $enrollmentId
-     * @param int $instructorId
+     * @param  int  $enrollmentId
+     * @param  int  $instructorId
      * @return bool
      */
-    public function hasInstructor($enrollmentId, $instructorId){
-        $query = "select 1 from enrollments where id = ? and instructor_id = ? limit 1";
+    public function hasInstructor($enrollmentId, $instructorId) {
+        $query = 'select 1 from enrollments where id = ? and instructor_id = ? limit 1';
 
         $stmt = $this->conn->prepare($query);
-        $stmt->bind_param("ii", $enrollmentId, $instructorId);
+        $stmt->bind_param('ii', $enrollmentId, $instructorId);
         $stmt->execute();
 
         return $stmt->get_result()->num_rows > 0;
@@ -342,15 +338,15 @@ class Enrollment{
     /**
      * Check if student owns enrollment.
      *
-     * @param int $enrollmentId
-     * @param int $studentId
+     * @param  int  $enrollmentId
+     * @param  int  $studentId
      * @return bool
      */
-    public function hasStudent($enrollmentId, $studentId){
-        $query = "select 1 from enrollments where id = ? and student_id = ? limit 1";
+    public function hasStudent($enrollmentId, $studentId) {
+        $query = 'select 1 from enrollments where id = ? and student_id = ? limit 1';
 
         $stmt = $this->conn->prepare($query);
-        $stmt->bind_param("ii", $enrollmentId, $studentId);
+        $stmt->bind_param('ii', $enrollmentId, $studentId);
         $stmt->execute();
 
         return $stmt->get_result()->num_rows > 0;
@@ -359,11 +355,11 @@ class Enrollment{
     /**
      * Check if student already belongs to course.
      *
-     * @param int $courseId
-     * @param int $studentId
+     * @param  int  $courseId
+     * @param  int  $studentId
      * @return bool
      */
-    public function studentInCourse($courseId, $studentId){
+    public function studentInCourse($courseId, $studentId) {
         $query = "
             select 1
             from enrollments
@@ -373,7 +369,7 @@ class Enrollment{
             limit 1";
 
         $stmt = $this->conn->prepare($query);
-        $stmt->bind_param("ii", $courseId, $studentId);
+        $stmt->bind_param('ii', $courseId, $studentId);
         $stmt->execute();
 
         return $stmt->get_result()->num_rows > 0;
@@ -382,20 +378,20 @@ class Enrollment{
     /**
      * Check if student is under instructor.
      *
-     * @param int $instructorId
-     * @param int $studentId
+     * @param  int  $instructorId
+     * @param  int  $studentId
      * @return bool
      */
-    public function studentUnderInstructor($instructorId, $studentId){
-        $query = "
+    public function studentUnderInstructor($instructorId, $studentId) {
+        $query = '
             select 1
             from enrollments
             where instructor_id = ?
             and student_id = ?
-            limit 1";
+            limit 1';
 
         $stmt = $this->conn->prepare($query);
-        $stmt->bind_param("ii", $instructorId, $studentId);
+        $stmt->bind_param('ii', $instructorId, $studentId);
         $stmt->execute();
 
         return $stmt->get_result()->num_rows > 0;
@@ -404,23 +400,26 @@ class Enrollment{
     /**
      * Create enrollment.
      *
-     * @param int $studentId
-     * @param int $courseId
-     * @param int $instructorId
-     * @param string $enrolledDate
-     * @param string $status
+     * @param  int  $studentId
+     * @param  int  $courseId
+     * @param  int  $instructorId
+     * @param  string  $enrolledDate
+     * @param  string  $status
      * @return int
      */
-    public function create($studentId, $courseId, $instructorId, $enrolledDate, $status){
-        $query = "insert into enrollments (student_id, course_id, instructor_id, enrolled_date, status) values (?,?,?,?,?)";
-        
+    public function create($studentId, $courseId, $instructorId, $enrolledDate, $status) {
+        $query = 'insert into enrollments (student_id, course_id, instructor_id, enrolled_date, status) values (?,?,?,?,?)';
+
         $stmt = $this->conn->prepare($query);
-        if (!$stmt) throw new Exception("Prepare failed: " . $this->conn->error);
+        if (! $stmt) {
+            throw new Exception('Prepare failed: '.$this->conn->error);
+        }
 
-        $stmt->bind_param("iiiss", $studentId, $courseId, $instructorId, $enrolledDate, $status);
+        $stmt->bind_param('iiiss', $studentId, $courseId, $instructorId, $enrolledDate, $status);
 
-        if (!$stmt->execute())
+        if (! $stmt->execute()) {
             throw new mysqli_sql_exception($this->conn->error, $this->conn->errno);
+        }
 
         return $this->conn->insert_id;
     }
@@ -428,43 +427,43 @@ class Enrollment{
     /**
      * Update enrollment data.
      *
-     * @param int $id
-     * @param array $data
+     * @param  int  $id
+     * @param  array  $data
      * @return mixed
      */
-    public function update($id, $data){
+    public function update($id, $data) {
         $queryData = QueryHelper::buildUpdateQuery(
-            "enrollments",
+            'enrollments',
             $data,
             [
-                "student_id" => "i",
-                "course_id" => "i",
-                "instructor_id" => "i",
-                "enrolled_date" =>  "s",
-                "status" =>  "s"
+                'student_id' => 'i',
+                'course_id' => 'i',
+                'instructor_id' => 'i',
+                'enrolled_date' => 's',
+                'status' => 's',
             ],
-            ["id" => ["value" => $id,"type" => "i"]]
+            ['id' => ['value' => $id, 'type' => 'i']]
         );
-        
+
         return QueryHelper::execute($this->conn, $queryData);
     }
 
     /**
      * Update enrollment status by course.
      *
-     * @param int $courseId
-     * @param string $fromStatus
-     * @param string $tostatus
+     * @param  int  $courseId
+     * @param  string  $fromStatus
+     * @param  string  $tostatus
      * @return mixed
      */
-    public function updateStatusByCourse($courseId, $fromStatus, $tostatus){
+    public function updateStatusByCourse($courseId, $fromStatus, $tostatus) {
         $queryData = QueryHelper::buildUpdateQuery(
-            "enrollments",
-            ["status" => $tostatus],
-            ["status" => "s"],
+            'enrollments',
+            ['status' => $tostatus],
+            ['status' => 's'],
             [
-                "course_id" => ["value" => $courseId, "type" => "i"],
-                "status"    => ["value" => $fromStatus,   "type" => "s"]
+                'course_id' => ['value' => $courseId, 'type' => 'i'],
+                'status' => ['value' => $fromStatus,   'type' => 's'],
             ]
         );
 

@@ -1,9 +1,9 @@
 <?php
 
-const ROLE_ADMIN ='admin';
-const ROLE_INSTRUCTOR ='instructor';
-const ROLE_STUDENT ='student';
-const ROLES =['admin','instructor','student'];
+const ROLE_ADMIN = 'admin';
+const ROLE_INSTRUCTOR = 'instructor';
+const ROLE_STUDENT = 'student';
+const ROLES = ['admin', 'instructor', 'student'];
 
 const USER_STATUS_ACTIVE = 'active';
 const USER_STATUS_DISABLED = 'disabled';

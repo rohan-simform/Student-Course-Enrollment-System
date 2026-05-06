@@ -1,13 +1,12 @@
 <?php
 
-require_once __DIR__ . '/../classes/EmailQueue.php';
-require_once __DIR__ . '/../helpers/Logger.php';
+require_once __DIR__.'/../classes/EmailQueue.php';
+require_once __DIR__.'/../helpers/Logger.php';
 
 /**
  * Handles email queue operations.
  */
-class MailService{
-
+class MailService {
     /**
      * Email queue model instance.
      *
@@ -18,7 +17,7 @@ class MailService{
     /**
      * Create a new MailService instance.
      *
-     * @param mysqli $db Database connection.
+     * @param  mysqli  $db  Database connection.
      */
     public function __construct($db) {
         $this->queue = new EmailQueue($db);
@@ -27,15 +26,15 @@ class MailService{
     /**
      * Queue welcome email for a single user.
      *
-     * @param string $email
-     * @param string $name
-     * @param string $username
-     * @param string $password
+     * @param  string  $email
+     * @param  string  $name
+     * @param  string  $username
+     * @param  string  $password
      * @return bool
      */
     public function queueWelcomeMail($email, $name, $username, $password) {
         try {
-            $subject = "Welcome to Enrollment System";
+            $subject = 'Welcome to Enrollment System';
 
             $body = "
                 <h2>Hello {$name},</h2>
@@ -63,6 +62,7 @@ class MailService{
 
         } catch (Throwable $e) {
             Logger::error($e, 'MAIL_QUEUE');
+
             return false;
         }
     }
@@ -70,8 +70,8 @@ class MailService{
     /**
      * Queue welcome emails in bulk.
      *
-     * @param array $users
-     * @param string $password
+     * @param  array  $users
+     * @param  string  $password
      * @return void
      */
     public function bulkQueueWelcomeMail($users, $password) {
@@ -81,8 +81,8 @@ class MailService{
             foreach ($users as $user) {
                 $rows[] = [
                     'recipient' => $user['email'],
-                    'subject'   => 'Welcome to Enrollment System',
-                    'body'      => "
+                    'subject' => 'Welcome to Enrollment System',
+                    'body' => "
                         <h2>Hello {$user['name']},</h2>
 
                         <p>Your registration has been completed by admin.</p>
@@ -93,12 +93,12 @@ class MailService{
                         </p>
 
                         <p>Please change password after login.</p>
-                    "
+                    ",
                 ];
             }
 
             $this->queue->bulkCreate($rows);
-            Logger::mail("Bulk queued " . count($rows) . " emails");
+            Logger::mail('Bulk queued '.count($rows).' emails');
 
         } catch (Throwable $e) {
             Logger::error($e, 'MAIL_BULK_QUEUE');

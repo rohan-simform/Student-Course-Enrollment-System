@@ -4,20 +4,19 @@
  * Provides reusable SQL query builder utilities.
  */
 class QueryHelper {
-
     /**
      * Build dynamic update query with parameters.
      *
-     * @param string $table
-     * @param array $data
-     * @param array $allowedFields
-     * @param array $whereConditions
+     * @param  string  $table
+     * @param  array  $data
+     * @param  array  $allowedFields
+     * @param  array  $whereConditions
      * @return array|null
      */
-    public static function buildUpdateQuery($table, $data, $allowedFields, $whereConditions){
+    public static function buildUpdateQuery($table, $data, $allowedFields, $whereConditions) {
         $fields = [];
         $params = [];
-        $types = "";
+        $types = '';
 
         // SET part
         foreach ($allowedFields as $field => $type) {
@@ -42,26 +41,29 @@ class QueryHelper {
         }
 
         $query = "UPDATE $table 
-                  SET " . implode(", ", $fields) . "
-                  WHERE " . implode(" AND ", $whereParts);
+                  SET ".implode(', ', $fields).'
+                  WHERE '.implode(' AND ', $whereParts);
 
         return [
-            "query" => $query,
-            "types" => $types,
-            "params" => $params
+            'query' => $query,
+            'types' => $types,
+            'params' => $params,
         ];
     }
 
     /**
      * Execute prepared query data.
      *
-     * @param mysqli $conn
-     * @param array|null $queryData
+     * @param  mysqli  $conn
+     * @param  array|null  $queryData
      * @return int
+     *
      * @throws Exception
      */
-    public static function execute($conn, $queryData){
-        if (!$queryData) return 0;
+    public static function execute($conn, $queryData) {
+        if (! $queryData) {
+            return 0;
+        }
 
         $stmt = $conn->prepare($queryData['query']);
 
@@ -70,7 +72,7 @@ class QueryHelper {
             ...$queryData['params']
         );
 
-        if (!$stmt->execute()) {
+        if (! $stmt->execute()) {
             throw new Exception($stmt->error);
         }
 

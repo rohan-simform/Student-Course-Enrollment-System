@@ -1,10 +1,11 @@
 <?php
-require_once __DIR__ . '/../helpers/QueryHelper.php';
+
+require_once __DIR__.'/../helpers/QueryHelper.php';
 
 /**
  * Handles user-related database operations.
  */
-class User{
+class User {
     /**
      * Database connection instance.
      *
@@ -15,23 +16,23 @@ class User{
     /**
      * Create a new User instance.
      *
-     * @param mysqli $db Database connection.
+     * @param  mysqli  $db  Database connection.
      */
-    public function __construct($db){
+    public function __construct($db) {
         $this->conn = $db;
     }
 
     /**
      * Get paginated users by role.
      *
-     * @param string|null $role
-     * @param int $page
-     * @param int $limit
+     * @param  string|null  $role
+     * @param  int  $page
+     * @param  int  $limit
      * @return array
      */
-    public function getUsers($role = null, $page = 1, $limit = 10){
-        $page = max(1, (int)$page);
-        $limit = max(1, (int)$limit);
+    public function getUsers($role = null, $page = 1, $limit = 10) {
+        $page = max(1, (int) $page);
+        $limit = max(1, (int) $limit);
         $offset = ($page - 1) * $limit;
 
         if ($role === ROLE_STUDENT) {
@@ -55,44 +56,46 @@ class User{
             $query = "select u.id,u.email,u.role,u.status from users u 
                 where u.role = 'admin' limit ? offset ?";
         } elseif ($role === null) {
-            $countQuery = "select count(*) as total from users";
-            $query = "select id, email, role, status from users limit ? offset ?";
+            $countQuery = 'select count(*) as total from users';
+            $query = 'select id, email, role, status from users limit ? offset ?';
         } else {
-            return ["status" => false,"message" => "Invalid role","data" => []];
+            return ['status' => false, 'message' => 'Invalid role', 'data' => []];
         }
 
         $countResult = $this->conn->query($countQuery);
         $total = $countResult->fetch_assoc()['total'];
 
         $stmt = $this->conn->prepare($query);
-        if (!$stmt) return ["status"=>false,"message"=>"Query prepare failed","data"=>[]];
-        
-        $stmt->bind_param("ii", $limit, $offset);
+        if (! $stmt) {
+            return ['status' => false, 'message' => 'Query prepare failed', 'data' => []];
+        }
+
+        $stmt->bind_param('ii', $limit, $offset);
         $stmt->execute();
 
         $result = $stmt->get_result();
         $data = $result->fetch_all(MYSQLI_ASSOC);
 
         return [
-            "data" => $data,
-            "pagination" => [
-                "page" => $page,
-                "limit" => $limit,
-                "total_rows" => (int)$total,
-                "total_pages" => ceil($total / $limit)
-            ]
+            'data' => $data,
+            'pagination' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total_rows' => (int) $total,
+                'total_pages' => ceil($total / $limit),
+            ],
         ];
     }
 
     /**
      * Get user by ID.
      *
-     * @param int $userId
+     * @param  int  $userId
      * @return array|null
      */
-    public function getById($userId){
-        $stmt = $this->conn->prepare("select id, role, email, status from users where id = ? limit 1");
-        $stmt->bind_param("i", $userId);
+    public function getById($userId) {
+        $stmt = $this->conn->prepare('select id, role, email, status from users where id = ? limit 1');
+        $stmt->bind_param('i', $userId);
         $stmt->execute();
 
         return $stmt->get_result()->fetch_assoc();
@@ -101,12 +104,12 @@ class User{
     /**
      * Get user by email.
      *
-     * @param string $email
+     * @param  string  $email
      * @return array|null
      */
-    public function getByEmail($email){
-        $stmt = $this->conn->prepare("select id, role, email, password, status from users where email = ? limit 1");
-        $stmt->bind_param("s", $email);
+    public function getByEmail($email) {
+        $stmt = $this->conn->prepare('select id, role, email, password, status from users where email = ? limit 1');
+        $stmt->bind_param('s', $email);
         $stmt->execute();
 
         return $stmt->get_result()->fetch_assoc();
@@ -115,19 +118,22 @@ class User{
     /**
      * Create user record.
      *
-     * @param string $role
-     * @param string $email
-     * @param string $password
+     * @param  string  $role
+     * @param  string  $email
+     * @param  string  $password
      * @return int
      */
-    public function create($role, $email, $password){
-        $stmt = $this->conn->prepare("insert into users (role, email, password) values (?, ?, ?)");
-        if (!$stmt) throw new Exception("Prepare failed: " . $this->conn->error);
+    public function create($role, $email, $password) {
+        $stmt = $this->conn->prepare('insert into users (role, email, password) values (?, ?, ?)');
+        if (! $stmt) {
+            throw new Exception('Prepare failed: '.$this->conn->error);
+        }
 
-        $stmt->bind_param("sss", $role, $email, $password);
+        $stmt->bind_param('sss', $role, $email, $password);
 
-        if (!$stmt->execute())
+        if (! $stmt->execute()) {
             throw new mysqli_sql_exception($this->conn->error, $this->conn->errno);
+        }
 
         return $this->conn->insert_id;
     }
@@ -135,43 +141,43 @@ class User{
     /**
      * Create multiple user records and return inserted IDs.
      *
-     * @param string $role
-     * @param array $emails
-     * @param string $password
+     * @param  string  $role
+     * @param  array  $emails
+     * @param  string  $password
      * @return array
      */
     public function bulkCreate($role, $emails, $password) {
-        $query = "insert into users (role, email, password) values ";
+        $query = 'insert into users (role, email, password) values ';
 
         $placeholders = [];
-        $types = "";
+        $types = '';
         $values = [];
 
         foreach ($emails as $email) {
-            $placeholders[] = "(?, ?, ?)";
-            $types .= "sss";
+            $placeholders[] = '(?, ?, ?)';
+            $types .= 'sss';
 
             $values[] = $role;
             $values[] = $email;
             $values[] = $password;
         }
 
-        $query .= implode(", ", $placeholders);
+        $query .= implode(', ', $placeholders);
 
         $stmt = $this->conn->prepare($query);
 
-        if (!$stmt) {
-            throw new Exception("Prepare failed: " . $this->conn->error);
+        if (! $stmt) {
+            throw new Exception('Prepare failed: '.$this->conn->error);
         }
 
         $stmt->bind_param($types, ...$values);
 
-        if (!$stmt->execute()) {
-            throw new mysqli_sql_exception($this->conn->error,$this->conn->errno);
+        if (! $stmt->execute()) {
+            throw new mysqli_sql_exception($this->conn->error, $this->conn->errno);
         }
 
         $firstId = $this->conn->insert_id;
-        $count   = $stmt->affected_rows;
+        $count = $stmt->affected_rows;
 
         $ids = [];
 
@@ -185,20 +191,20 @@ class User{
     /**
      * Update user data.
      *
-     * @param int $userId
-     * @param array $data
+     * @param  int  $userId
+     * @param  array  $data
      * @return mixed
      */
-    public function update($userId, $data){
+    public function update($userId, $data) {
         $queryData = QueryHelper::buildUpdateQuery(
-            "users",
+            'users',
             $data,
             [
-                "email"    => "s",
-                "password" => "s",
-                "status"   => "s"
+                'email' => 's',
+                'password' => 's',
+                'status' => 's',
             ],
-            ["id" => ["value" => $userId, "type" => "i"]]
+            ['id' => ['value' => $userId, 'type' => 'i']]
         );
 
         return QueryHelper::execute($this->conn, $queryData);
@@ -207,15 +213,15 @@ class User{
     /**
      * Soft delete user.
      *
-     * @param int $userId
+     * @param  int  $userId
      * @return mixed
      */
-    public function softDelete($userId){
+    public function softDelete($userId) {
         $queryData = QueryHelper::buildUpdateQuery(
-            "users",
-            ["status" => "disabled"],
-            ["status" => "s"],
-            ["id" => ["value" => $userId, "type" => "i"]]
+            'users',
+            ['status' => 'disabled'],
+            ['status' => 's'],
+            ['id' => ['value' => $userId, 'type' => 'i']]
         );
 
         return QueryHelper::execute($this->conn, $queryData);
@@ -224,26 +230,28 @@ class User{
     /**
      * Check if user exists by conditions.
      *
-     * @param array $conditions
+     * @param  array  $conditions
      * @return bool
      */
     public function exists($conditions = []) {
         $allowedFields = ['id', 'role', 'email', 'status'];
         $clauses = [];
-        $types   = '';
-        $params  = [];
+        $types = '';
+        $params = [];
 
         foreach ($conditions as $key => $value) {
             if (in_array($key, $allowedFields, true)) {
                 $clauses[] = "$key = ?";
-                $types    .= is_int($value) ? 'i' : 's';
-                $params[]  = $value;
+                $types .= is_int($value) ? 'i' : 's';
+                $params[] = $value;
             }
         }
 
-        if (empty($clauses)) return false;
+        if (empty($clauses)) {
+            return false;
+        }
 
-        $query = "select 1 from users where " . implode(" and ", $clauses) . " limit 1";
+        $query = 'select 1 from users where '.implode(' and ', $clauses).' limit 1';
 
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param($types, ...$params);
@@ -255,13 +263,13 @@ class User{
     /**
      * Check if user has given role.
      *
-     * @param int $userId
-     * @param string $role
+     * @param  int  $userId
+     * @param  string  $role
      * @return bool
      */
-    public function isRole($userId, $role){
-        $stmt = $this->conn->prepare("select 1 from users where id = ? and role = ? limit 1");
-        $stmt->bind_param("is", $userId, $role);
+    public function isRole($userId, $role) {
+        $stmt = $this->conn->prepare('select 1 from users where id = ? and role = ? limit 1');
+        $stmt->bind_param('is', $userId, $role);
         $stmt->execute();
 
         return $stmt->get_result()->num_rows > 0;
@@ -270,12 +278,12 @@ class User{
     /**
      * Check if user account is active.
      *
-     * @param int $userId
+     * @param  int  $userId
      * @return bool
      */
-    public function isActive($userId){
+    public function isActive($userId) {
         $stmt = $this->conn->prepare("select 1 from users where id = ? and status = 'active' limit 1");
-        $stmt->bind_param("i", $userId);
+        $stmt->bind_param('i', $userId);
         $stmt->execute();
 
         return $stmt->get_result()->num_rows > 0;

@@ -1,23 +1,24 @@
 <?php
-require_once __DIR__."/../config/constants.php";
+
+require_once __DIR__.'/../config/constants.php';
 /**
  * Provides authentication and session helper methods.
  */
 class AuthHelper {
-
     /**
      * Get current authenticated user from session.
      *
      * @return array|null
      */
-    public static function user(){
-        if (isset($_SESSION['user_id'], $_SESSION['role']) && 
+    public static function user() {
+        if (isset($_SESSION['user_id'], $_SESSION['role']) &&
             in_array($_SESSION['role'], ROLES, true)) {
             return [
-                "user_id" => (int)$_SESSION['user_id'],
-                "role" => $_SESSION['role']
+                'user_id' => (int) $_SESSION['user_id'],
+                'role' => $_SESSION['role'],
             ];
         }
+
         return null;
     }
 
@@ -26,8 +27,9 @@ class AuthHelper {
      *
      * @return bool
      */
-    public static function isAdmin(){
+    public static function isAdmin() {
         $user = self::user();
+
         return $user && $user['role'] === ROLE_ADMIN;
     }
 
@@ -36,8 +38,9 @@ class AuthHelper {
      *
      * @return bool
      */
-    public static function isStudent(){
+    public static function isStudent() {
         $user = self::user();
+
         return $user && $user['role'] === ROLE_STUDENT;
     }
 
@@ -46,19 +49,19 @@ class AuthHelper {
      *
      * @return bool
      */
-    public static function isInstructor(){
+    public static function isInstructor() {
         $user = self::user();
+
         return $user && $user['role'] === ROLE_INSTRUCTOR;
     }
 
     /**
      * Get dashboard path based on role.
      *
-     * @param string|null $role
+     * @param  string|null  $role
      * @return string
      */
-    public static function dashboardPath($role = null)
-    {
+    public static function dashboardPath($role = null) {
         if ($role === null) {
             $role = isset($_SESSION['role']) ? $_SESSION['role'] : null;
         }

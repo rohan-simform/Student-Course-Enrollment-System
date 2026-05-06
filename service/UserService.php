@@ -1,16 +1,17 @@
 <?php
-require_once __DIR__ . '/../classes/User.php';
-require_once __DIR__ . '/../classes/Student.php';
-require_once __DIR__ . '/../classes/Instructor.php';
-require_once __DIR__ . '/../helpers/Permission.php';
-require_once __DIR__ . '/../service/MailService.php';
-require_once __DIR__ . '/../helpers/Result.php';
-require_once __DIR__ . '/../helpers/Logger.php';
+
+require_once __DIR__.'/../classes/User.php';
+require_once __DIR__.'/../classes/Student.php';
+require_once __DIR__.'/../classes/Instructor.php';
+require_once __DIR__.'/../helpers/Permission.php';
+require_once __DIR__.'/../service/MailService.php';
+require_once __DIR__.'/../helpers/Result.php';
+require_once __DIR__.'/../helpers/Logger.php';
 
 /**
  * Handles user business logic and permissions.
  */
-class UserService{
+class UserService {
     /**
      * Database connection instance.
      *
@@ -49,28 +50,29 @@ class UserService{
     /**
      * Create a new UserService instance.
      *
-     * @param mysqli $db Database connection.
+     * @param  mysqli  $db  Database connection.
      */
-    public function __construct($db){
-        $this->conn         = $db;
-        $this->user         = new User($db);
-        $this->student      = new Student($db);
-        $this->instructor   = new Instructor($db);
-        $this->mailService  = new MailService($db);
+    public function __construct($db) {
+        $this->conn = $db;
+        $this->user = new User($db);
+        $this->student = new Student($db);
+        $this->instructor = new Instructor($db);
+        $this->mailService = new MailService($db);
         Permission::init($db);
     }
 
     /**
      * Get users list by role.
      *
-     * @param string|null $role
-     * @param int $page
-     * @param int $limit
+     * @param  string|null  $role
+     * @param  int  $page
+     * @param  int  $limit
      * @return array
      */
-    public function getUsers($role = null, $page = 1, $limit = 10){
-        if (!Permission::check("user.read"))
+    public function getUsers($role = null, $page = 1, $limit = 10) {
+        if (! Permission::check('user.read')) {
             return Result::fail(MSG_UNAUTHORIZED);
+        }
 
         try {
             if ($role === ROLE_STUDENT) {
@@ -80,8 +82,9 @@ class UserService{
             } else {
                 return Result::success('', $this->user->getUsers($role, $page, $limit));
             }
-        } catch(Throwable $e){
+        } catch (Throwable $e) {
             Logger::error($e, 'User getUsers');
+
             return Result::fail(MSG_UNEXPECTED_ERROR);
         }
     }
@@ -89,18 +92,20 @@ class UserService{
     /**
      * Get user profile details.
      *
-     * @param int $userId
+     * @param  int  $userId
      * @return array
      */
-    public function getProfile($userId){
-        if (!Permission::check("user.read", $userId))
+    public function getProfile($userId) {
+        if (! Permission::check('user.read', $userId)) {
             return Result::fail(MSG_UNAUTHORIZED);
+        }
 
         try {
             $account = $this->user->getById($userId);
 
-            if (!$account)
+            if (! $account) {
                 return Result::fail(MSG_USER_NOT_FOUND);
+            }
 
             if ($account['role'] === ROLE_STUDENT) {
                 $profile = $this->student->getByUserId($userId);
@@ -108,14 +113,15 @@ class UserService{
                 $profile = $this->instructor->getByUserId($userId);
             }
 
-            if (!empty($profile)) {
+            if (! empty($profile)) {
                 $account = array_merge($account, $profile);
             }
 
-            return Result::success("", $account);
+            return Result::success('', $account);
 
-        } catch(Throwable $e){
+        } catch (Throwable $e) {
             Logger::error($e, 'User getProfile');
+
             return Result::fail(MSG_UNEXPECTED_ERROR);
         }
     }
@@ -123,13 +129,14 @@ class UserService{
     /**
      * Create new user account.
      *
-     * @param string $role
-     * @param array $data
+     * @param  string  $role
+     * @param  array  $data
      * @return array
      */
-    public function addUser($role, $data){
-        if (!Permission::check("user.create"))
+    public function addUser($role, $data) {
+        if (! Permission::check('user.create')) {
             return Result::fail(MSG_UNAUTHORIZED);
+        }
 
         try {
             $this->conn->begin_transaction();
@@ -149,35 +156,35 @@ class UserService{
 
             return Result::success(MSG_USER_CREATED_SUCCESSFULLY, ['user_id' => $userId]);
 
-        } catch(mysqli_sql_exception $e){
+        } catch (mysqli_sql_exception $e) {
             $this->conn->rollback();
             Logger::error($e, 'User create');
-            if ($e->getCode() == 1062)
+            if ($e->getCode() == 1062) {
                 return Result::fail(MSG_EMAIL_ALREADY_EXISTS);
+            }
+
             return Result::fail(MSG_FAILED_TO_CREATE_USER);
-        } catch(Throwable $e){
+        } catch (Throwable $e) {
             $this->conn->rollback();
             Logger::error($e, 'User create');
+
             return Result::fail(MSG_UNEXPECTED_ERROR);
         }
     }
-    
+
     /**
      * Create multiple student accounts in bulk.
      *
-     * @param array $data
+     * @param  array  $data
      * @return array
      */
-    public function bulkAddStudent($data){
-        // if (!Permission::check("user.create"))
-        //     return Result::fail("Unauthorized");
-
+    public function bulkAddStudent($data) {
         try {
             $this->conn->begin_transaction();
 
-            $emails = array_column($data,'email');
-            $names = array_column($data,'name');
-            $phones = array_column($data,'phone');
+            $emails = array_column($data, 'email');
+            $names = array_column($data, 'name');
+            $phones = array_column($data, 'phone');
             $tempPassword = 'tempPass123';
 
             $ids = $this->user->bulkCreate(ROLE_STUDENT, $emails, $tempPassword);
@@ -187,19 +194,22 @@ class UserService{
 
             $this->conn->commit();
 
-            $this->mailService->bulkQueueWelcomeMail($data,$tempPassword);
+            $this->mailService->bulkQueueWelcomeMail($data, $tempPassword);
 
             return Result::success(MSG_USER_CREATED_SUCCESSFULLY, ['ids' => $ids]);
 
-        } catch(mysqli_sql_exception $e){
+        } catch (mysqli_sql_exception $e) {
             $this->conn->rollback();
             Logger::error($e, 'Student Bulk Create');
-            if ($e->getCode() == 1062)
+            if ($e->getCode() == 1062) {
                 return Result::fail(MSG_EMAIL_ALREADY_EXISTS);
-            return Result::fail("Failed to Bulk create student");
-        } catch(Throwable $e){
+            }
+
+            return Result::fail('Failed to Bulk create student');
+        } catch (Throwable $e) {
             $this->conn->rollback();
             Logger::error($e, 'Student Bulk Create');
+
             return Result::fail(MSG_UNEXPECTED_ERROR);
         }
     }
@@ -207,32 +217,35 @@ class UserService{
     /**
      * Update user account and profile.
      *
-     * @param int $userId
-     * @param array $data
+     * @param  int  $userId
+     * @param  array  $data
      * @return array
      */
-    public function updateUser($userId, $data){
-        if (!Permission::check("user.update", $userId))
+    public function updateUser($userId, $data) {
+        if (! Permission::check('user.update', $userId)) {
             return Result::fail(MSG_UNAUTHORIZED);
+        }
 
         try {
-            if (!$this->user->exists(['id'=>$userId]))
+            if (! $this->user->exists(['id' => $userId])) {
                 return Result::fail(MSG_USER_NOT_FOUND);
+            }
 
             $this->conn->begin_transaction();
 
             $total = 0;
 
             $accountData = array_intersect_key($data, array_flip(['email', 'password', 'status']));
-            if (!empty($accountData))
+            if (! empty($accountData)) {
                 $total += $this->user->update($userId, $accountData);
+            }
 
             $account = $this->user->getById($userId);
             $role = $account['role'];
 
             $profileData = array_intersect_key($data, array_flip(['name', 'phone', 'salary', 'status']));
 
-            if (!empty($profileData)) {
+            if (! empty($profileData)) {
                 if (isset($profileData['status'])) {
                     $profileData['is_active'] = ($profileData['status'] === 'active') ? 'active' : 'inactive';
                     unset($profileData['status']);
@@ -247,18 +260,21 @@ class UserService{
 
             $this->conn->commit();
 
-            if ($total > 0)
+            if ($total > 0) {
                 return Result::success(MSG_USER_UPDATED_SUCCESSFULLY);
-            else
+            } else {
                 return Result::fail(MSG_NO_CHANGES_MADE);
+            }
 
-        } catch(mysqli_sql_exception $e){
+        } catch (mysqli_sql_exception $e) {
             $this->conn->rollback();
             Logger::error($e, 'User update');
-            return Result::fail("Failed to update user");
-        } catch(Throwable $e){
+
+            return Result::fail('Failed to update user');
+        } catch (Throwable $e) {
             $this->conn->rollback();
             Logger::error($e, 'User update');
+
             return Result::fail(MSG_UNEXPECTED_ERROR);
         }
     }
@@ -266,16 +282,18 @@ class UserService{
     /**
      * Soft delete user account.
      *
-     * @param int $userId
+     * @param  int  $userId
      * @return array
      */
-    public function deleteUser($userId){
-        if (!Permission::check("user.delete", $userId))
+    public function deleteUser($userId) {
+        if (! Permission::check('user.delete', $userId)) {
             return Result::fail(MSG_UNAUTHORIZED);
+        }
 
         try {
-            if (!$this->user->exists(['id'=>$userId]))
+            if (! $this->user->exists(['id' => $userId])) {
                 return Result::fail(MSG_USER_NOT_FOUND);
+            }
 
             $account = $this->user->getById($userId);
             $role = $account['role'];
@@ -294,18 +312,21 @@ class UserService{
 
             $this->conn->commit();
 
-            if ($total > 0)
+            if ($total > 0) {
                 return Result::success(MSG_USER_DEACTIVATED_SUCCESSFULLY);
-            else
+            } else {
                 return Result::fail(MSG_USER_NOT_FOUND);
+            }
 
-        } catch(mysqli_sql_exception $e){
+        } catch (mysqli_sql_exception $e) {
             $this->conn->rollback();
             Logger::error($e, 'User delete');
+
             return Result::fail(MSG_FAILED_TO_DEACTIVATE_USER);
-        } catch(Throwable $e){
+        } catch (Throwable $e) {
             $this->conn->rollback();
             Logger::error($e, 'User delete');
+
             return Result::fail(MSG_UNEXPECTED_ERROR);
         }
     }
