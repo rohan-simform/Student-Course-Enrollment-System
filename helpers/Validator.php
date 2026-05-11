@@ -123,13 +123,14 @@ class Validator {
      *
      * @throws Exception
      */
-    public static function integer($value, $label = 'Value', $min = 0) {
+    public static function integer($value, $label = 'Value', $min = 0)
+    {
         if ($value === null || $value === '') {
             throw new Exception("$label is required");
         }
 
-        if (! is_numeric($value)) {
-            throw new Exception("$label must be a number");
+        if (filter_var($value, FILTER_VALIDATE_INT) === false) {
+            throw new Exception("$label must be an integer");
         }
 
         $value = (int) $value;

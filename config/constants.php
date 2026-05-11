@@ -19,7 +19,11 @@ const ENROLLMENT_STATUS_WITHDRAWN = 'withdrawn';
 
 const MSG_UNAUTHORIZED = 'Unauthorized';
 const MSG_UNEXPECTED_ERROR = 'Unexpected error';
+const MSG_INVALID_CSRF = 'Invalid CSRF token';
+const MSG_INVALID_METHOD = 'Method Not Allowed';
 const MSG_USER_NOT_FOUND = 'User not found';
+const MSG_VALIDATION_FAILED = 'Validation failed';
+
 const MSG_USER_CREATED_SUCCESSFULLY = 'User created successfully';
 const MSG_EMAIL_ALREADY_EXISTS = 'Email already exists';
 const MSG_FAILED_TO_CREATE_USER = 'Failed to create user';
@@ -31,7 +35,3 @@ const MSG_FAILED_TO_DEACTIVATE_USER = 'Failed to deactivate user';
 const DASHBOARD_STUDENT_ROUTE = '/public/dashboards/student_dashboard.php';
 const DASHBOARD_INSTRUCTOR_ROUTE = '/public/dashboards/instructor_dashboard.php';
 const DASHBOARD_ADMIN_ROUTE = '/public/dashboards/admin_dashboard.php';
-
-const LIST_STUDENTS_ROUTE = '../public/listStudents.php';
-const LIST_INSTRUCTORS_ROUTE = '../public/listInstructors.php';
-const LIST_ADMINS_ROUTE = '../public/listAdmins.php';
