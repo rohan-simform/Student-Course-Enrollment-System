@@ -1,0 +1,56 @@
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 400px;
+}
+
+.logo-section {
+    text-align: center;
+    margin-bottom: 30px;
+    color: white;
+}
+
+.logo-section h1 {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.logo-section p {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.captcha-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.captcha-section img {
+    border-radius: 6px;
+    border: 2px solid #e2e8f0;
+}
+
+.captcha-refresh-btn {
+    padding: 8px 12px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s;
+}
+
+.captcha-refresh-btn:hover {
+    background: #764ba2;
+}

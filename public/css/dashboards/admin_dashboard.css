@@ -1,0 +1,23 @@
+/* Admin Dashboard Specific Styles */
+
+/* Additional admin-specific styling can be added here */
+
+.admin-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.management-section {
+    margin-bottom: 30px;
+}
+
+.section-description {
+    color: #6c757d;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
