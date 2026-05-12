@@ -308,11 +308,12 @@ class Course {
     /**
      * Get enrolled course details for student.
      *
+     * @param  int  $enrollmentId
      * @param  int  $studentId
      * @param  int  $courseId
      * @return array
      */
-    public function getStudentCourseDetails($studentId, $courseId) {
+    public function getStudentCourseDetails($enrollmentId, $studentId, $courseId) {
         $query = '
             select
                 c.id as course_id,
@@ -328,12 +329,12 @@ class Course {
             from enrollments e
             join courses c on e.course_id = c.id
             join instructors i on e.instructor_id = i.user_id
-            where e.student_id = ?
+            where e.student_id = ? and e.id = ?
             and c.id = ?
             limit 1';
 
         $stmt = $this->conn->prepare($query);
-        $stmt->bind_param('ii', $studentId, $courseId);
+        $stmt->bind_param('iii', $studentId, $enrollmentId, $courseId);
         $stmt->execute();
 
         $data = $stmt->get_result()->fetch_assoc();
