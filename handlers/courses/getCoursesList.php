@@ -4,7 +4,8 @@ session_start();
 header('Content-Type: application/json');
 
 require_once __DIR__.'/../../config/init.php';
-require_once __DIR__.'/../../service/CourseService.php';
+require_once __DIR__.'/../../classes/Course.php';
+require_once __DIR__.'/../../helpers/Logger.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     echo json_encode(Result::fail(MSG_INVALID_METHOD));
@@ -20,12 +21,11 @@ try {
 }
 
 $currentUser = AuthHelper::user();
-$courseService = new CourseService($conn);
 
 try {
     if (AuthHelper::isStudent()) {
         // Student: Get enrolled courses
-        $result = $courseService->getStudentCourses($currentUser['user_id'], $page, $limit);
+        $result = $course->getStudentCourses($currentUser['user_id'], $page, $limit);
 
         if (! $result['status']) {
             throw new Exception($result['message']);

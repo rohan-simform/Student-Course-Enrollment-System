@@ -80,12 +80,13 @@ function renderTable(courses) {
 }
 
 function renderStudentView(courses, $tbody) {
+    console.log(courses);
 
     $.each(courses, function (index, course) {
 
         let actionButtons = `
             <div class="action-buttons">
-                <button class="action-btn btn-view" onclick="viewCourseDetails(${course.course_id})">
+                <button class="action-btn btn-view" onclick="viewCourseDetails(${course.course_id},${course.enrollment_id})">
                     <i class="fas fa-eye"></i> Details
                 </button>
         `;
@@ -155,8 +156,8 @@ function renderAdminInstructorView(courses, $tbody) {
     });
 }
 
-function viewCourseDetails(courseId) {
-    window.location.href = `courseDetails.php?course_id=${courseId}`;
+function viewCourseDetails(courseId,enrollmentId) {
+    window.location.href = `courseDetails.php?course_id=${courseId}&enrollment_id=${enrollmentId}`;
 }
 
 function withdrawRequest(enrollmentId) {

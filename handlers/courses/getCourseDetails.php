@@ -4,7 +4,6 @@ session_start();
 header('Content-Type: application/json');
 
 require_once __DIR__.'/../../config/init.php';
-require_once __DIR__.'/../../service/CourseService.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     echo json_encode(Result::fail(MSG_INVALID_METHOD));
@@ -12,6 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 $courseId = isset($_GET['id']) ? (int) $_GET['id'] : (isset($_GET['course_id']) ? (int) $_GET['course_id'] : 0);
+$enrollmentId = isset($_GET['enrollment_id']) ? (int) $_GET['enrollment_id'] : 0;
+
 
 if ($courseId <= 0) {
     echo json_encode(Result::fail('Invalid course ID'));
@@ -21,19 +22,18 @@ if ($courseId <= 0) {
 // Check if this is for students viewing details or admins/instructors editing
 if (AuthHelper::isStudent()) {
     // Student viewing course details
-    $courseService = new CourseService($conn);
     $userId = $_SESSION['user_id'];
     $backPath = 'availableCourses.php';
 
     try {
         // Try to get as enrolled course first
-        $result = $courseService->getStudentCourseDetails($userId, $courseId);
+        $result = $course->getStudentCourseDetails($enrollmentId ,$userId, $courseId);
 
         if ($result['status']) {
             $backPath = 'listCourses.php';
         } else {
             // Fall back to available course
-            $result = $courseService->getAvailableCourseDetails($userId, $courseId);
+            $result = $course->getAvailableCourseDetails($userId, $courseId);
             $backPath = 'availableCourses.php';
         }
 

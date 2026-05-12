@@ -1,15 +1,17 @@
 let courseId = new URLSearchParams(window.location.search).get('course_id');
+let enrollmentId = new URLSearchParams(window.location.search).get('enrollment_id');
+
 
 async function loadCourseDetails() {
-    if (!courseId) {
-        alert('Invalid course ID');
+    if (!courseId || !enrollmentId) {
+        alert('Invalid course Id or enrollment Id');
         window.history.back();
         return;
     }
 
     try {
         const data = await $.ajax({
-            url: APP.baseUrl + `courses/getCourseDetails.php?course_id=${courseId}`,
+            url: APP.baseUrl + `courses/getCourseDetails.php?course_id=${courseId}&enrollment_id=${enrollmentId}`,
             type: 'GET',
             dataType: 'json'
         });
@@ -30,7 +32,7 @@ async function loadCourseDetails() {
     } catch (err) {
         alert("Failed to load course details");
         console.error(err);
-        window.history.back();
+        // window.history.back();
     }
 }
 

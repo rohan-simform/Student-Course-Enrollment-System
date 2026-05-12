@@ -40,6 +40,7 @@
         </div>
     </div>
 
+    <script defer src="./js/config.php"></script>
     <script defer src="./js/functions.js"></script>
     <script defer src="./js/courseDetails.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
