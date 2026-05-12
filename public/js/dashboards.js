@@ -26,8 +26,11 @@ function escapeHtml(str) {
  */
 async function loadDashboardData() {
     try {
-        const res = await fetch(APP.baseUrl + 'dashboards/getDashboardData.php');
-        const response = await res.json();
+        const response = await $.ajax({
+            url: APP.baseUrl + 'dashboards/getDashboardData.php',
+            type: 'GET',
+            dataType: 'json'
+        });
 
         if (!response.status) {
             console.error('Failed to load dashboard data:', response.message);
@@ -313,7 +316,7 @@ function updateStudentStatsCards(data) {
         if (statCards[0]) {
             const num = statCards[0].querySelector('.stat-number');
             if (num) num.textContent = data.activeCourses || 0;
-        }statBoxes
+        }
 
         // Completed
         if (statCards[1]) {
@@ -371,3 +374,9 @@ function updateStudentStatsCards(data) {
 
 window.loadDashboardData = loadDashboardData;
 window.updateStudentStatsCards = updateStudentStatsCards;
+
+$(document).ready(function () {
+    if (typeof loadDashboardData === 'function') {
+        loadDashboardData();
+    }
+});

@@ -8,11 +8,14 @@ async function loadCourseDetails() {
     }
 
     try {
-        const res = await fetch(APP.baseUrl + `courses/getCourseDetails.php?course_id=${courseId}`);
-        const data = await res.json();
+        const data = await $.ajax({
+            url: APP.baseUrl + `courses/getCourseDetails.php?course_id=${courseId}`,
+            type: 'GET',
+            dataType: 'json'
+        });
 
         if (!data.status) {
-            alert(data.message);
+            alert(data);
             window.history.back();
             return;
         }
@@ -20,7 +23,7 @@ async function loadCourseDetails() {
         const course = data.data.course ?? data.data;
         const backPath = data.data.backPath ?? 'listCourses.php';
 
-        document.getElementById("backBtn").href = backPath;
+        $('#backBtn').attr('href', backPath);
         renderCourseDetails(course);
         console.log(data);
 
@@ -32,7 +35,7 @@ async function loadCourseDetails() {
 }
 
 function renderCourseDetails(course) {
-    const container = document.getElementById("detailsContainer");
+    const $container = $('#detailsContainer');
     const rows = [
         ['Course ID', course.course_id],
         ['Course Name', escapeHtml(course.course_name)],
@@ -51,12 +54,12 @@ function renderCourseDetails(course) {
         rows.push(['Enrolled Date', escapeHtml(course.enrolled_date ?? '-')]);
     }
 
-    container.innerHTML = rows.map(([label, value]) => `
+    $container.html(rows.map(([label, value]) => `
         <tr>
             <td><strong>${label}</strong></td>
             <td>${value}</td>
         </tr>
-    `).join('');
+    `).join(''));
 }
 
 function formatStatusBadge(status) {

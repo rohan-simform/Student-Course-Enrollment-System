@@ -52,7 +52,6 @@
 
     <script defer src="/public/js/config.php"></script>
     <script defer src="/public/js/functions.js"></script>
-    <script defer src="/public/js/dashboardRedirect.js"></script>
     <script defer src="/public/js/listStudents.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

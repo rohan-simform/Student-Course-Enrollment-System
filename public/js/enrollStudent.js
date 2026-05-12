@@ -4,8 +4,11 @@ let allCourses = [];
 
 async function loadUserInfo() {
     try {
-        const response = await fetch(APP.baseUrl + 'auth/getCurrentUser.php');
-        const result = await response.json();
+        const result = await $.ajax({
+            url: APP.baseUrl + 'auth/getCurrentUser.php',
+            type: 'GET',
+            dataType: 'json'
+        });
         
         if (result.status) {
             currentUserId = result.data.user_id;
@@ -21,8 +24,11 @@ async function loadUserInfo() {
 
 async function loadEnrollData() {
     try {
-        const response = await fetch(APP.baseUrl + 'enrollments/getEnrollStudentData.php');
-        const result = await response.json();
+        const result = await $.ajax({
+            url: APP.baseUrl + 'enrollments/getEnrollStudentData.php',
+            type: 'GET',
+            dataType: 'json'
+        });
         
         if (!result.status) {
             alert('Failed to load data: ' + (result.message || 'Unknown error'));
@@ -59,8 +65,11 @@ async function loadAvailableCoursesForStudent(studentId) {
             return;
         }
 
-        const response = await fetch(APP.baseUrl + `enrollments/getAvailableCoursesForStudent.php?student_id=${studentId}`);
-        const result = await response.json();
+        const result = await $.ajax({
+            url: APP.baseUrl + `enrollments/getAvailableCoursesForStudent.php?student_id=${studentId}`,
+            type: 'GET',
+            dataType: 'json'
+        });
         
         if (!result.status) {
             alert('Failed to load available courses');
@@ -89,12 +98,12 @@ function populateCoursesDropdown(courses) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', async function() {
+$(document).ready(async function () {
     await loadUserInfo();
     await loadEnrollData();
 
     // Add listener for student selection
-    document.querySelector('select[name="student_id"]').addEventListener('change', function() {
+    $('select[name="student_id"]').on('change', function () {
         loadAvailableCoursesForStudent(this.value);
     });
 });

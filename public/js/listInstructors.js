@@ -4,8 +4,11 @@ let dashboardPath = null;
 
 async function getCurrentUserInfo() {
     try {
-        const res = await fetch(APP.baseUrl + 'auth/getCurrentUser.php');
-        const data = await res.json();
+        const data = await $.ajax({
+            url: APP.baseUrl + 'auth/getCurrentUser.php',
+            type: 'GET',
+            dataType: 'json'
+        });
 
         if (data.status) {
             dashboardPath = data.data.dashboard;
@@ -20,8 +23,11 @@ async function loadInstructors(page = 1) {
     currentPage = page;
 
     try {
-        const res = await fetch(APP.baseUrl + `users/getInstructorsList.php?page=${page}&limit=${limit}`);
-        const data = await res.json();
+        const data = await $.ajax({
+            url: APP.baseUrl + `users/getInstructorsList.php?page=${page}&limit=${limit}`,
+            type: 'GET',
+            dataType: 'json'
+        });
 
         if (!data.status) {
             alert(data.message);
@@ -66,5 +72,7 @@ function editInstructor(id) {
     window.location.href = `editInstructor.php?user_id=${id}`;
 }
 
-getCurrentUserInfo();
-loadInstructors();
+$(document).ready(function () {
+    getCurrentUserInfo();
+    loadInstructors();
+});
