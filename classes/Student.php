@@ -200,4 +200,37 @@ class Student {
 
         return $stmt->get_result()->num_rows > 0;
     }
+
+    public function getTableConfig() {
+        return [
+            'table' => '
+                users u
+                join students s on u.id = s.user_id
+            ',
+            'select' => '
+                u.id,
+                u.email,
+                u.role,
+                u.status,
+                s.name,
+                s.phone,
+                s.enrolled_on
+            ',
+            'where' => "u.role = 'student'",
+            'searchable' => [
+                'u.email',
+                's.name',
+                's.phone',
+            ],
+            'sortable' => [
+                'u.id',
+                'u.email',
+                's.name',
+                's.phone',
+                's.enrolled_on',
+                'u.status',
+            ],
+            'defaultOrder' => 'u.id DESC',
+        ];
+    }
 }

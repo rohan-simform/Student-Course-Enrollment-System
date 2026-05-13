@@ -469,4 +469,162 @@ class Enrollment {
 
         return QueryHelper::execute($this->conn, $queryData);
     }
+
+    /**
+     * Get course students table config for DataTables.
+     *
+     * @param  int  $courseId
+     * @return array
+     */
+    public function getCourseStudentsTableConfig($courseId) {
+        $courseId = (int) $courseId;
+        return [
+            'table' => '
+                enrollments e
+                join students s on e.student_id = s.user_id
+                join instructors i on e.instructor_id = i.user_id
+            ',
+            'select' => '
+                e.id as enrollment_id,
+                e.student_id,
+                s.name as student_name,
+                e.enrolled_date,
+                e.status as enrollment_status,
+                i.user_id as instructor_id,
+                i.name as instructor_name
+            ',
+            'where' => "
+                e.course_id = {$courseId}
+            ",
+            'searchable' => [
+                's.name',
+                'i.name',
+            ],
+            'sortable' => [
+                'student_id',
+                'student_name',
+                'enrolled_date',
+                'enrollment_status',
+            ],
+            'defaultOrder' => '
+                e.enrolled_date DESC,
+                e.id DESC
+            ',
+        ];
+    }
+
+    /**
+     * Get enrollments table config for DataTables (all enrollments or filtered by instructor/student).
+     *
+     * @param  int|null  $instructorId  Optional filter for instructor's courses
+     * @param  int|null  $studentId     Optional filter for student's enrollments
+     * @return array
+     */
+    public function getEnrollmentsTableConfig($instructorId = null, $studentId = null) {
+        $table = '
+            enrollments e
+            join students s on e.student_id = s.user_id
+            join courses c on e.course_id = c.id
+            join instructors i on e.instructor_id = i.user_id
+        ';
+
+        $where = '1 = 1';
+        if ($instructorId) {
+            $instructorId = (int) $instructorId;
+            $where = "e.instructor_id = {$instructorId}";
+        } elseif ($studentId) {
+            $studentId = (int) $studentId;
+            $where = "e.student_id = {$studentId}";
+        }
+
+        return [
+            'table' => $table,
+            'select' => '
+                e.id,
+                e.student_id,
+                s.name as student_name,
+                e.course_id,
+                c.name as course_name,
+                e.instructor_id,
+                i.name as instructor_name,
+                e.enrolled_date,
+                e.status
+            ',
+            'where' => $where,
+            'searchable' => [
+                's.name',
+                'c.name',
+                'i.name',
+            ],
+            'sortable' => [
+                'student_id',
+                'student_name',
+                'course_id',
+                'course_name',
+                'enrolled_date',
+                'status',
+            ],
+            'defaultOrder' => '
+                e.enrolled_date DESC,
+                e.id DESC
+            ',
+        ];
+    }
+
+    /**
+     * Get enrollment requests table config for DataTables (requested status only).
+     *
+     * @param  int|null  $instructorId  Optional filter for instructor's course requests
+     * @param  int|null  $studentId     Optional filter for student's own requests
+     * @return array
+     */
+    public function getEnrollmentRequestsTableConfig($instructorId = null, $studentId = null) {
+        $table = '
+            enrollments e
+            join students s on e.student_id = s.user_id
+            join courses c on e.course_id = c.id
+            join instructors i on e.instructor_id = i.user_id
+        ';
+
+        $where = "e.status = 'requested'";
+        if ($instructorId) {
+            $instructorId = (int) $instructorId;
+            $where = "e.status = 'requested' AND e.instructor_id = {$instructorId}";
+        } elseif ($studentId) {
+            $studentId = (int) $studentId;
+            $where = "e.status = 'requested' AND e.student_id = {$studentId}";
+        }
+
+        return [
+            'table' => $table,
+            'select' => '
+                e.id,
+                e.student_id,
+                s.name as student_name,
+                e.course_id,
+                c.name as course_name,
+                e.instructor_id,
+                i.name as instructor_name,
+                e.enrolled_date,
+                e.status
+            ',
+            'where' => $where,
+            'searchable' => [
+                's.name',
+                'c.name',
+                'i.name',
+            ],
+            'sortable' => [
+                'student_id',
+                'student_name',
+                'course_id',
+                'course_name',
+                'enrolled_date',
+            ],
+            'defaultOrder' => '
+                e.enrolled_date DESC,
+                e.id DESC
+            ',
+        ];
+    }
 }

@@ -7,6 +7,7 @@ require_once __DIR__.'/../helpers/Permission.php';
 require_once __DIR__.'/../service/MailService.php';
 require_once __DIR__.'/../helpers/Result.php';
 require_once __DIR__.'/../helpers/Logger.php';
+require_once __DIR__.'/../helpers/DataTableHelper.php';
 
 /**
  * Handles user business logic and permissions.
@@ -84,6 +85,40 @@ class UserService {
             }
         } catch (Throwable $e) {
             Logger::error($e, 'User getUsers');
+
+            return Result::fail(MSG_UNEXPECTED_ERROR);
+        }
+    }
+
+    public function getUsersTable($role = null) {
+        if (! Permission::check('user.read')) {
+            return Result::fail(MSG_UNAUTHORIZED);
+        }
+
+        try {
+
+            if ($role === ROLE_STUDENT) {
+                $config = $this->student->getTableConfig();
+
+            } elseif ($role === ROLE_INSTRUCTOR) {
+                $config = $this->instructor->getTableConfig();
+
+            } else {
+                $config = $this->user->getUsersQuery($role);
+            }
+
+            return Result::success(
+                '',
+                DataTableHelper::make(
+                    $this->conn,
+                    $config,
+                    $_GET
+                )
+            );
+
+        } catch (Throwable $e) {
+
+            Logger::error($e, 'User DataTable');
 
             return Result::fail(MSG_UNEXPECTED_ERROR);
         }

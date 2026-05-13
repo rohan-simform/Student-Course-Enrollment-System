@@ -1,149 +1,67 @@
-let currentPage = 1;
-let limit = 10;
+let availableCoursesTable = null;
 
-function loadAvailableCourses(page = 1) {
+$(document).ready(function () {
+    initializeDataTable();
+});
 
-    currentPage = page;
+function initializeDataTable() {
+    const columns = [
+        { data: 'course_name' },
+        { data: 'instructor_name' },
+        { data: 'duration_weeks' },
+        { data: 'available_seats' },
+        { data: 'max_seats' },
+        {
+            data: 'course_id',
+            orderable: false,
+            searchable: false,
+            render: function (data, type, row) {
+                let isDisabled = row.available_seats <= 0;
 
-    $.ajax({
-        url: APP.baseUrl + `courses/getAvailableCoursesList.php?page=${page}&limit=${limit}`,
-        type: 'GET',
-        dataType: 'json',
-
-        success: function (data) {
-
-            if (!data.status) {
-                alert(data.message);
-                return;
+                return `
+                    <div class="action-buttons">
+                        <button class="action-btn btn-enroll" onclick="enrollCourse(${row.course_id}, ${row.instructor_id})" ${isDisabled ? 'disabled' : ''}>
+                            <i class="fas fa-check"></i> Enroll
+                        </button>
+                    </div>
+                `;
             }
-
-            renderTable(data.data.courses);
-
-            renderPagination(
-                data.data.pagination,
-                loadAvailableCourses
-            );
-        },
-
-        error: function (xhr, status, error) {
-
-            console.error(error);
-
-            alert('Failed to load available courses');
         }
-    });
+    ];
+
+    availableCoursesTable = initTable(
+        'availableCoursesTable',
+        columns,
+        null,
+        APP.baseUrl + 'courses/getAvailableCoursesList.php'
+    );
 }
 
-function renderTable(courses) {
-
-    const $tbody = $('#courseTableBody');
-
-    $tbody.html('');
-
-    if (courses.length === 0) {
-
-        $tbody.append(`
-            <tr>
-                <td colspan="6">
-                    No Available Courses Found
-                </td>
-            </tr>
-        `);
-
+function enrollCourse(courseId, instructorId) {
+    if (!confirm('Enroll in this course?')) {
         return;
     }
-
-    $.each(courses, function (index, course) {
-
-        $tbody.append(`
-            <tr>
-                <td>
-                    ${course.course_id}
-                    -
-                    ${escapeHtml(course.course_name)}
-                </td>
-
-                <td>
-                    ${course.instructor_id}
-                    -
-                    ${escapeHtml(course.instructor_name)}
-                </td>
-
-                <td>
-                    ${course.duration_weeks} Weeks
-                </td>
-
-                <td>${course.available_seats}</td>
-
-                <td>${course.max_seats}</td>
-
-                <td>
-                    <div class="action-buttons">
-
-                        <button
-                            class="action-btn btn-view"
-                            onclick="viewCourseDetails(${course.course_id})"
-                        >
-                            <i class="fas fa-eye"></i>
-                            Details
-                        </button>
-
-                        <button
-                            class="action-btn btn-approve"
-                            onclick="requestToJoin(${course.course_id}, ${course.instructor_id})"
-                        >
-                            <i class="fas fa-user-plus"></i>
-                            Join
-                        </button>
-
-                    </div>
-                </td>
-            </tr>
-        `);
-    });
-}
-
-function viewCourseDetails(courseId) {
-
-    window.location.href =
-        `courseDetails.php?course_id=${courseId}&source=available`;
-}
-
-function requestToJoin(courseId, instructorId) {
 
     $.ajax({
         url: APP.baseUrl + 'enrollments/requestEnrollment.php',
         type: 'POST',
-
         data: {
             course_id: courseId,
             instructor_id: instructorId
         },
-
         dataType: 'json',
-
         success: function (response) {
-
             alert(response.message);
-
-            if (response.status) {
-                loadAvailableCourses(currentPage);
+            if (response.status && availableCoursesTable) {
+                availableCoursesTable.ajax.reload();
             }
         },
-
         error: function (xhr) {
-
             let message = 'Something went wrong';
-
             if (xhr.responseJSON?.message) {
                 message = xhr.responseJSON.message;
             }
-
             alert(message);
         }
     });
 }
-
-$(document).ready(function () {
-    loadAvailableCourses();
-});

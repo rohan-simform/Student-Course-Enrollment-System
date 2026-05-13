@@ -28,30 +28,27 @@
         </div>
 
         <div class="table-wrapper">
-            <table class="data-table">
+            <table id="courseStudentsTable" class="table table-striped table-bordered data-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Student</th>
                         <th>Instructor</th>
-                        <th>Date</th>
+                        <th>Enrolled Date</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody id="studentTableBody"></tbody>
+                <tbody>
+                </tbody>
             </table>
-        </div>
-
-        <div class="pagination-container">
-            <div id="pagination"></div>
         </div>
     </div>
 
     <script defer src="/public/js/config.php"></script>
+    <script defer src="/public/js/datatable.js"></script>
     <script defer src="./js/functions.js"></script>
     <script defer src="./js/courseStudents.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
 </body>
 
 </html>

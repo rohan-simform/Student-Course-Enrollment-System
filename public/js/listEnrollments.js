@@ -1,102 +1,132 @@
-let currentPage = 1;
-let limit = 10;
+let enrollmentsTable = null;
 let currentUserRole = null;
 
-function loadEnrollments(page = 1) {
+$(document).ready(function () {
+    getCurrentUserInfo();
+});
 
-    currentPage = page;
-
+function getCurrentUserInfo() {
     $.ajax({
-        url: APP.baseUrl + `enrollments/getEnrollmentsList.php?page=${page}&limit=${limit}`,
+        url: APP.baseUrl + 'auth/getCurrentUser.php',
         type: 'GET',
         dataType: 'json',
-
         success: function (data) {
-
-            if (!data.status) {
-                alert(data.message);
-                return;
+            if (data.status) {
+                currentUserRole = data.data.role;
+                initializeDataTable();
             }
-
-            currentUserRole = data.data.role;
-
-            renderTable(data.data.enrollments);
-
-            renderPagination(data.data.pagination, loadEnrollments);
         },
-
         error: function (xhr, status, error) {
-
-            console.error(error);
-
-            alert('Failed to load enrollments');
+            console.error('Failed to fetch current user', error);
         }
     });
 }
 
-function renderTable(enrollments) {
+function initializeDataTable() {
+    let columns = [
+        { data: 'id' },
+        { data: 'student_name' },
+        { data: 'course_name' },
+        { data: 'instructor_name' },
+        { data: 'enrolled_date' },
+        { data: 'status' }
+    ];
 
-    const $tbody = $('#enrollmentTableBody');
-
-    $tbody.html('');
-
-    $.each(enrollments, function (index, row) {
-
-        let actionButtons = '';
-
-        if (currentUserRole !== 'student') {
-
-            actionButtons += `
-                <button class="action-btn btn-edit" onclick="editEnrollment(${row.id})">
-                    <i class="fas fa-edit"></i> Edit
-                </button>
-            `;
-
-            if (row.status === 'requested') {
-
-                actionButtons += `
-                    <button class="action-btn btn-approve" onclick="approveRequest(${row.id})">
-                        <i class="fas fa-check"></i> Approve
-                    </button>
-
-                    <button class="action-btn btn-reject" onclick="rejectRequest(${row.id})">
-                        <i class="fas fa-times"></i> Reject
-                    </button>
+    // Only add Action column for non-students
+    if (currentUserRole !== 'student') {
+        columns.push({
+            data: 'id',
+            orderable: false,
+            searchable: false,
+            render: function (data, type, row) {
+                let actions = `
+                    <div class="action-buttons">
+                        <button class="action-btn btn-edit" onclick="editEnrollment(${data})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
                 `;
+
+                if (row.status === 'requested') {
+                    actions += `
+                        <button class="action-btn btn-approve" onclick="approveRequest(${data})">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="action-btn btn-reject" onclick="rejectRequest(${data})">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    `;
+                }
+
+                if (row.status === 'active') {
+                    actions += `
+                        <button class="action-btn btn-disable" onclick="cancelEnrollment(${data})">
+                            <i class="fas fa-ban"></i> Cancel
+                        </button>
+                        <button class="action-btn btn-approve" onclick="completeEnrollment(${data})">
+                            <i class="fas fa-check-circle"></i> Complete
+                        </button>
+                    `;
+                }
+
+                actions += `</div>`;
+                return actions;
             }
+        });
 
-            if (row.status === 'active') {
-
-                actionButtons += `
-                    <button class="action-btn btn-reject" onclick="cancelEnrollment(${row.id})">
-                        <i class="fas fa-ban"></i> Cancel
-                    </button>
-
-                    <button class="action-btn btn-approve" onclick="completeEnrollment(${row.id})">
-                        <i class="fas fa-check-circle"></i> Complete
-                    </button>
-                `;
-            }
-
-            actionButtons = `<div class="action-buttons">${actionButtons}</div>`;
-        }
-
-        $tbody.append(`
-            <tr>
-                <td>${row.id}</td>
-                <td>${row.student_id} - ${escapeHtml(row.student_name)}</td>
-                <td>${row.course_id} - ${escapeHtml(row.course_name)}</td>
-                <td>${row.instructor_id} - ${escapeHtml(row.instructor_name)}</td>
-                <td>${row.enrolled_date}</td>
-                <td>${row.status.charAt(0).toUpperCase() + row.status.slice(1)}</td>
-                ${currentUserRole !== 'student' ? `<td>${actionButtons}</td>` : ''}
-            </tr>
+        // Update table header for non-students
+        $('#enrollmentsTable thead tr').html(`
+            <th>ID</th>
+            <th>Student</th>
+            <th>Course</th>
+            <th>Instructor</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Action</th>
         `);
-    });
+    } else {
+        // Update table header for students (no Action column)
+        $('#enrollmentsTable thead tr').html(`
+            <th>ID</th>
+            <th>Student</th>
+            <th>Course</th>
+            <th>Instructor</th>
+            <th>Date</th>
+            <th>Status</th>
+        `);
+    }
+
+    enrollmentsTable = initTable(
+        'enrollmentsTable',
+        columns,
+        null,
+        APP.baseUrl + 'enrollments/getEnrollmentsList.php'
+    );
 }
 
 function editEnrollment(id) {
     window.location.href = `editEnrollment.php?id=${id}`;
+}
+
+function enrollmentAction(url, id) {
+    $.ajax({
+        url: APP.baseUrl + 'enrollments/' + url,
+        type: 'POST',
+        data: { id: id },
+        dataType: 'json',
+        success: function (response) {
+            alert(response.message);
+            if (response.status && enrollmentsTable) {
+                enrollmentsTable.ajax.reload();
+            }
+        },
+        error: function (xhr) {
+            let message = 'Something went wrong';
+            if (xhr.responseJSON?.message) {
+                message = xhr.responseJSON.message;
+            }
+            alert(message);
+        }
+    });
 }
 
 function approveRequest(id) {
@@ -114,30 +144,3 @@ function cancelEnrollment(id) {
 function completeEnrollment(id) {
     enrollmentAction('completeEnrollment.php', id);
 }
-
-function enrollmentAction(url, id) {
-
-    $.ajax({
-        url: APP.baseUrl + 'enrollments/' + url,
-        type: 'POST',
-
-        data: {
-            id: id
-        },
-
-        dataType: 'json',
-
-        success: function (response) {
-
-            alert(response.message);
-
-            if (response.status) {
-                loadEnrollments(currentPage);
-            }
-        }
-    });
-}
-
-$(document).ready(function () {
-    loadEnrollments();
-});

@@ -1,97 +1,70 @@
-let currentPage = 1;
-let limit = 10;
 let currentUserId = null;
+let adminTable = null;
 
+$(document).ready(function () {
+    getCurrentUserInfo();
+});
 
-function loadAdmins(page = 1) {
-
-    currentPage = page;
-
+function getCurrentUserInfo() {
     $.ajax({
-        url: APP.baseUrl + `users/getAdminsList.php?page=${page}&limit=${limit}`,
+        url: APP.baseUrl + 'auth/getCurrentUser.php',
         type: 'GET',
         dataType: 'json',
-
         success: function (data) {
-
-            if (!data.status) {
-                alert(data.message);
-                return;
+            if (data.status) {
+                currentUserId = data.data.user_id;
+                initializeDataTable();
             }
-
-            renderTable(data.data.admins);
-
-            renderPagination(data.data.pagination, loadAdmins);
+        },
+        error: function (xhr, status, error) {
+            console.error('Failed to fetch current user', error);
         }
     });
 }
 
-function renderTable(admins) {
+function initializeDataTable() {
+    adminTable = initTable(
+        'adminsTable',
+        [
+            { data: 'id' },
+            { data: 'email' },
+            { data: 'status' },
+            {
+                data: 'id',
+                orderable: false,
+                searchable: false,
+                render: function (data, type, row) {
+                    let actions = `
+                        <div class="action-buttons">
+                            <button class="action-btn btn-edit" onclick="editAdmin(${row.id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                    `;
 
-    const $tbody = $('#adminTableBody');
+                    if (row.id != currentUserId) {
+                        actions += `
+                            <button class="action-btn btn-disable" onclick="disableUser(${row.id}, reloadTable)">
+                                <i class="fas fa-ban"></i> Disable
+                            </button>
+                        `;
+                    }
 
-    $tbody.html('');
-
-    $.each(admins, function (index, admin) {
-
-        $tbody.append(`
-            <tr>
-                <td>${admin.id}</td>
-                <td>${escapeHtml(admin.email)}</td>
-                <td>${admin.status}</td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="action-btn btn-edit" onclick="editAdmin(${admin.id})">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-
-                        ${admin.id != currentUserId
-                            ? `
-                                <button class="action-btn btn-disable" onclick="disableUser(${admin.id}, loadAdmins)">
-                                    <i class="fas fa-ban"></i> Disable
-                                </button>
-                            `
-                            : ''
-                        }
-                    </div>
-                </td>
-            </tr>
-        `);
-    });
+                    actions += `</div>`;
+                    return actions;
+                }
+            }
+        ],
+        null,
+        APP.baseUrl + 'users/getAdminsList.php'
+    );
 }
 
 function editAdmin(id) {
     window.location.href = `editAdmin.php?user_id=${id}`;
 }
 
-$(document).ready(function () {
-
-    getCurrentUserInfo();
-});
-
-function getCurrentUserInfo() {
-
-    $.ajax({
-        url: APP.baseUrl + 'auth/getCurrentUser.php',
-        type: 'GET',
-        dataType: 'json',
-
-        success: function (data) {
-
-            if (data.status) {
-
-                currentUserId = data.data.user_id;
-
-                loadAdmins();
-            }
-        },
-
-        error: function (xhr, status, error) {
-
-            console.error(
-                'Failed to fetch current user',
-                error
-            );
-        }
-    });
+function reloadTable() {
+    if (adminTable) {
+        adminTable.ajax.reload();
+    }
 }
