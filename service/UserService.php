@@ -152,7 +152,7 @@ class UserService {
 
             $this->conn->commit();
 
-            $this->mailService->queueWelcomeMail($data['email'], $data['name'], $data['email'], $data['password']);
+            $this->mailService->queueWelcomeMail($data['email'], $data['name'] ?? "", $data['email'], $data['password']);
 
             return Result::success(MSG_USER_CREATED_SUCCESSFULLY, ['user_id' => $userId]);
 

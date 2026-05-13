@@ -302,12 +302,14 @@ class User {
             $stmt->bind_param('i', $userId);
             $stmt->execute();
             $result = $stmt->get_result()->fetch_assoc();
+
             return $result['name'] ?? 'Student';
         } elseif ($role === ROLE_INSTRUCTOR) {
             $stmt = $this->conn->prepare('select name from instructors where user_id = ? limit 1');
             $stmt->bind_param('i', $userId);
             $stmt->execute();
             $result = $stmt->get_result()->fetch_assoc();
+
             return $result['name'] ?? 'Instructor';
         } else {
             // Admin - use email or generic name
@@ -315,6 +317,7 @@ class User {
             $stmt->bind_param('i', $userId);
             $stmt->execute();
             $result = $stmt->get_result()->fetch_assoc();
+
             return $result['email'] ? explode('@', $result['email'])[0] : 'Admin';
         }
     }
