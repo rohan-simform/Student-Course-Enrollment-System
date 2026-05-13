@@ -19,10 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 try {
 
-    if (!CsrfHelper::verifyRequest()) {
-        throw new Exception(MSG_INVALID_CSRF);
-    }
-
     $courseId = Validator::integer($_POST['course_id'] ?? null, 'Course ID', 1);
 
 } catch (Exception $e) {

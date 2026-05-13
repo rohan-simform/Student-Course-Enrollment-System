@@ -38,8 +38,9 @@
         </div>
     </div>
 
-    <script defer src="/public/js/config.php"></script>
+    <script defer src="./js/config.php"></script>
     <script defer src="./js/functions.js"></script>
+    <script defer src="./js/validator.js"></script>
     <script defer src="./js/assignCourse.js"></script>
 
 </body>

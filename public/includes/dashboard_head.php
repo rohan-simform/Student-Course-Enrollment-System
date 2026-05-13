@@ -25,3 +25,5 @@
 
 <!-- App Config (Global Variables) -->
 <script defer src="/public/js/config.php"></script>
+
+<script src="/public/js/sidebar.js"></script>

@@ -17,7 +17,7 @@
                 <p>Update course details</p>
             </div>
 
-            <form action="../handlers/updateCourse.php" method="POST" novalidate>
+            <form action="../handlers/courses/updateCourse.php" method="POST" novalidate>
                 <input type="hidden" name="course_id">
                 <?= CsrfHelper::hiddenInput() ?>
 

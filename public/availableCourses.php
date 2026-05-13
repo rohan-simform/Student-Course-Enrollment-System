@@ -13,8 +13,8 @@
     <div class="main-content">
         <?php
             $pageTitle = 'Available Courses';
-            $userName = 'Student';
-            $userRole = 'Student';
+            $userRole = AuthHelper::user()['role'] ?? 'user';
+            $userName = ucfirst($userRole);
             include __DIR__.'/includes/dashboard_top_nav.php';
         ?>
 

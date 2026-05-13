@@ -14,6 +14,9 @@ $userRole = $userRole ?? 'U';
 
 <!-- Top Navigation Bar -->
 <div class="top-nav">
+    <button class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
     <h5><i class="fas fa-tachometer-alt"></i> <?php echo htmlspecialchars($pageTitle); ?></h5>
     <div class="user-info">
         <span><i class="fas fa-bell"></i></span>

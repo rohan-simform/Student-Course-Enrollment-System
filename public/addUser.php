@@ -17,7 +17,7 @@
                 <p>Add a new user to the system</p>
             </div>
 
-            <form action="../handlers/addUser.php" method="POST" novalidate>
+            <form action="../handlers/users/addUser.php" method="POST" novalidate>
                 <?= CsrfHelper::hiddenInput() ?>
 
                 <div class="form-group">
@@ -63,9 +63,9 @@
         </div>
     </div>
 
-    <script defer src="/public/js/functions.js"></script>
-    <script defer src="/public/js/validator.js"></script>
-    <script defer src="/public/js/addUser.js"></script>
+    <script defer src="./js/functions.js"></script>
+    <script defer src="./js/validator.js"></script>
+    <script defer src="./js/addUser.js"></script>
 </body>
 
 </html>

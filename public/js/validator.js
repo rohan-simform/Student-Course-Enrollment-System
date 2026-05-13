@@ -79,4 +79,18 @@ class Validator {
 
         return value;
     }
+
+    static role(value){
+        if (!value) {
+            throw new Error('Role not Selected');
+        }
+
+        value = value.trim();
+
+        if(value !== "admin" && value !== "instructor" && value !== "student"){
+            throw new Error('Invalid Role');
+        }
+
+        return value;
+    }
 }

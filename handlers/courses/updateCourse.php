@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+header('Content-Type: application/json');
 require_once __DIR__.'/../../config/init.php';
 require_once __DIR__.'/../../service/CourseService.php';
 
@@ -10,7 +11,7 @@ if (! AuthHelper::user()) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ../public/listCourses.php');
+    echo json_encode(Result::fail(MSG_INVALID_METHOD));
     exit;
 }
 
@@ -54,7 +55,7 @@ $result = $courseService->updateCourse($courseId, $data);
 $msg = htmlspecialchars($result['message'], ENT_QUOTES);
 
 if ($result['status']) {
-    echo "<script>alert('{$msg}'); window.location='../public/listCourses.php';</script>";
-} else {
-    echo "<script>alert('Error: {$msg}'); window.history.back();</script>";
+    $result['redirect'] = '../public/listCourses.php';
 }
+
+echo json_encode($result);

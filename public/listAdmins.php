@@ -15,8 +15,8 @@ include __DIR__.'/includes/init.php'; ?>
     <div class="main-content">
         <?php
             $pageTitle = 'Admin List';
-            $userName = 'Admin';
-            $userRole = 'Admin';
+            $userRole = AuthHelper::user()['role'] ?? 'user';
+            $userName = ucfirst($userRole);
             include __DIR__.'/includes/dashboard_top_nav.php';
         ?>
 
