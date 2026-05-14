@@ -8,6 +8,7 @@ require_once __DIR__.'/../helpers/Permission.php';
 require_once __DIR__.'/../helpers/Result.php';
 require_once __DIR__.'/../helpers/Logger.php';
 require_once __DIR__.'/../helpers/AuthHelper.php';
+require_once __DIR__.'/../helpers/DataTableHelper.php';
 
 /**
  * Handles enrollment business logic and permissions.
@@ -440,6 +441,99 @@ class EnrollmentService {
             return Result::fail('Failed to complete course');
         } catch (Throwable $e) {
             Logger::error($e, 'Course complete');
+
+            return Result::fail(MSG_UNEXPECTED_ERROR);
+        }
+    }
+
+    /**
+     * Get course students table for DataTables.
+     *
+     * @param  int  $courseId
+     * @return array
+     */
+    public function getCourseStudentsTable($courseId) {
+
+        try {
+            if (! $this->course->exists($courseId)) {
+                return Result::fail('Course not found');
+            }
+
+            $config = $this->enrollment->getCourseStudentsTableConfig($courseId);
+
+            $data = DataTableHelper::make($this->conn, $config, $_GET);
+
+            return Result::success('', $data);
+        } catch (Throwable $e) {
+            Logger::error($e, 'Course Students Table');
+
+            return Result::fail(MSG_UNEXPECTED_ERROR);
+        }
+    }
+
+    /**
+     * Get enrollments table for DataTables.
+     *
+     * @param  string  $userRole
+     * @param  int  $userId
+     * @return array
+     */
+    public function getEnrollmentsTable($userRole, $userId) {
+
+        try {
+            // Admin sees all enrollments
+            // Instructors see only their course enrollments
+            // Students see only their own enrollments
+            $instructorId = null;
+            $studentId = null;
+
+            if ($userRole === ROLE_INSTRUCTOR) {
+                $instructorId = $userId;
+            } elseif ($userRole === ROLE_STUDENT) {
+                $studentId = $userId;
+            }
+
+            $config = $this->enrollment->getEnrollmentsTableConfig($instructorId, $studentId);
+
+            $data = DataTableHelper::make($this->conn, $config, $_GET);
+
+            return Result::success('', $data);
+        } catch (Throwable $e) {
+            Logger::error($e, 'Enrollments Table');
+
+            return Result::fail(MSG_UNEXPECTED_ERROR);
+        }
+    }
+
+    /**
+     * Get enrollment requests table for DataTables.
+     *
+     * @param  string  $userRole
+     * @param  int  $userId
+     * @return array
+     */
+    public function getEnrollmentRequestsTable($userRole, $userId) {
+
+        try {
+            // Admin sees all enrollment requests
+            // Instructors see requests for their courses
+            // Students see only their own requests
+            $instructorId = null;
+            $studentId = null;
+
+            if ($userRole === ROLE_INSTRUCTOR) {
+                $instructorId = $userId;
+            } elseif ($userRole === ROLE_STUDENT) {
+                $studentId = $userId;
+            }
+
+            $config = $this->enrollment->getEnrollmentRequestsTableConfig($instructorId, $studentId);
+
+            $data = DataTableHelper::make($this->conn, $config, $_GET);
+
+            return Result::success('', $data);
+        } catch (Throwable $e) {
+            Logger::error($e, 'Enrollment Requests Table');
 
             return Result::fail(MSG_UNEXPECTED_ERROR);
         }

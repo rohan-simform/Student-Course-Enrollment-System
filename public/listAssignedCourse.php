@@ -19,16 +19,12 @@
             include __DIR__.'/includes/dashboard_top_nav.php';
         ?>
 
-        <!-- Search & Filter Bar -->
-        <div class="search-filter-bar">
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Search here...">
-            </div>
+        <div class="page-header">
+            <h1><i class="fas fa-cube"></i> Assigned Courses</h1>
         </div>
 
-        <!-- Table Wrapper -->
         <div class="table-wrapper">
-            <table class="data-table">
+            <table id="assignedCoursesTable" class="table table-striped table-bordered data-table">
                 <thead>
                     <tr>
                         <th>Course ID</th>
@@ -38,20 +34,17 @@
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody id="courseTableBody"></tbody>
+                <tbody>
+                </tbody>
             </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="pagination-container">
-            <div id="pagination"></div>
         </div>
     </div>
 
     <script defer src="/public/js/config.php"></script>
+    <script defer src="/public/js/datatable.js"></script>
     <script defer src="./js/functions.js"></script>
     <script defer src="./js/listAssignedCourse.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
 </body>
 
 </html>

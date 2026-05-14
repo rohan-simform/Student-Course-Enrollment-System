@@ -64,6 +64,8 @@ class Instructor {
         ];
     }
 
+    
+
     /**
      * Get instructors assigned to a course.
      *
@@ -226,5 +228,74 @@ class Instructor {
         );
 
         return QueryHelper::execute($this->conn, $queryData);
+    }
+
+    public function getTableConfig() {
+        return [
+            'table' => '
+                users u
+                join instructors i on u.id = i.user_id
+            ',
+            'select' => '
+                u.id,
+                u.email,
+                u.role,
+                u.status,
+                i.name,
+                i.phone,
+                i.salary
+            ',
+            'where' => "u.role = 'instructor'",
+            'searchable' => [
+                'u.email',
+                'i.name',
+                'i.phone',
+            ],
+            'sortable' => [
+                'u.id',
+                'u.email',
+                'i.name',
+                'i.phone',
+                'i.salary',
+                'u.status',
+            ],
+            'defaultOrder' => 'u.id DESC',
+        ];
+    }
+    
+    /**
+     * Get course instructors table config for DataTables.
+     *
+     * @param  int  $courseId
+     * @return array
+     */
+    public function getCourseInstructorsTableConfig($courseId) {
+        $courseId = (int) $courseId;
+        return [
+            'table' => '
+                courses_instructors ci
+                join instructors i on ci.instructor_id = i.user_id
+            ',
+            'select' => '
+                i.user_id as instructor_id,
+                i.name as instructor_name,
+                i.salary,
+                i.phone,
+                i.is_active as status
+            ',
+            'where' => "
+                ci.course_id = {$courseId}
+            ",
+            'searchable' => [
+                'i.name',
+            ],
+            'sortable' => [
+                'instructor_id',
+                'instructor_name',
+            ],
+            'defaultOrder' => '
+                i.name ASC
+            ',
+        ];
     }
 }

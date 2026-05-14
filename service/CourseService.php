@@ -8,6 +8,7 @@ require_once __DIR__.'/../helpers/Permission.php';
 require_once __DIR__.'/../helpers/Result.php';
 require_once __DIR__.'/../helpers/Logger.php';
 require_once __DIR__.'/../helpers/AuthHelper.php';
+require_once __DIR__.'/../helpers/DataTableHelper.php';
 
 /**
  * Handles course business logic and permissions.
@@ -277,5 +278,82 @@ class CourseService {
         }
     }
 
-}
 
+    public function getCoursesTable($userId = null, $role = null) {
+        try {
+            if ($role === ROLE_STUDENT) {
+                $config = $this->course->getStudentCoursesTableConfig($userId);
+            } elseif ($role === ROLE_INSTRUCTOR) {
+                $config = $this->course->getInstructorCoursesTableConfig($userId);
+            } elseif ($role === ROLE_ADMIN || $role === null) {
+                $config = $this->course->getAdminCoursesTableConfig();
+            } else {
+                return Result::fail('Invalid role');
+            }
+
+            $data = DataTableHelper::make($this->conn, $config, $_GET);
+
+            return Result::success('', $data);
+        } catch (Throwable $e) {
+            Logger::error($e, 'Course Table');
+
+            return Result::fail(MSG_UNEXPECTED_ERROR);
+        }
+    }
+
+    public function getAvailableCoursesTable($studentId) {
+        try {
+            $config = $this->course->getAvailableCoursesTableConfig($studentId);
+            
+            $data = DataTableHelper::make($this->conn, $config, $_GET);
+
+            return Result::success('', $data);
+        } catch (Throwable $e) {
+            Logger::error($e, 'Available Courses Table');
+            return Result::fail(MSG_UNEXPECTED_ERROR);
+        }
+    }
+
+    /**
+     * Get course instructors table for DataTables.
+     *
+     * @param  int  $courseId
+     * @return array
+     */
+    public function getCourseInstructorsTable($courseId) {
+        try {
+            if (! $this->course->exists($courseId)) {
+                return Result::fail('Course not found');
+            }
+
+            $config = $this->instructor->getCourseInstructorsTableConfig($courseId);
+
+            $data = DataTableHelper::make($this->conn, $config, $_GET);
+
+            return Result::success('', $data);
+        } catch (Throwable $e) {
+            Logger::error($e, 'Course Instructors Table');
+
+            return Result::fail(MSG_UNEXPECTED_ERROR);
+        }
+    }
+
+    /**
+     * Get assigned courses table for DataTables.
+     *
+     * @return array
+     */
+    public function getAssignedCoursesTable() {
+        try {
+            $config = $this->course->getAssignedCoursesTableConfig();
+
+            $data = DataTableHelper::make($this->conn, $config, $_GET);
+
+            return Result::success('', $data);
+        } catch (Throwable $e) {
+            Logger::error($e, 'Assigned Courses Table');
+
+            return Result::fail(MSG_UNEXPECTED_ERROR);
+        }
+    }
+}

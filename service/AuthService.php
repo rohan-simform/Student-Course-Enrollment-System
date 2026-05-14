@@ -50,8 +50,8 @@ class AuthService {
      */
     public function login($email, $password, $captcha) {
         try {
-            // if(!$this->checkCaptcha($captcha))
-            //     return Result::fail("Invalid Captcha");
+            if(!$this->checkCaptcha($captcha))
+                return Result::fail("Invalid Captcha");
 
             $foundUser = $this->user->getByEmail($email);
 
@@ -59,8 +59,7 @@ class AuthService {
                 return Result::fail('Email not found');
             }
 
-            // if (!password_verify($password, $foundUser['password']))
-            if ($password !== $foundUser['password']) {
+            if (!password_verify($password, $foundUser['password'])){
                 return Result::fail('Invalid email or password');
             }
 
@@ -98,6 +97,8 @@ class AuthService {
     public function register($email, $password, $name, $phone) {
         try {
             $this->conn->begin_transaction();
+            
+            $password = password_hash($password, PASSWORD_DEFAULT);
 
             $userId = $this->user->create(ROLE_STUDENT, $email, $password);
 
@@ -124,8 +125,15 @@ class AuthService {
     }
 
     private function checkCaptcha($captcha) {
-        $code = $_SESSION['captcha'];
+        $code = $_SESSION['captcha'] ?? null;
 
-        return $captcha === $code;
+        if ($code === null) {
+            return false;
+        }
+
+        $provided = is_string($captcha) ? trim($captcha) : '';
+        $stored = is_string($code) ? trim($code) : '';
+
+        return strcasecmp($provided, $stored) === 0;
     }
 }

@@ -58,9 +58,9 @@ require_once __DIR__.'/../helpers/CsrfHelper.php';
         </div>
     </div>
 
-    <script defer src="./config.php"></script>
-    <script defer src="./js/validator.js"></script>
-    <script defer src="./js/login.js"></script>
+    <script defer src="/public/js/config.php"></script>
+    <script defer src="/public/js/validator.js"></script>
+    <script defer src="/public/js/login.js"></script>
 </body>
 </html>
 

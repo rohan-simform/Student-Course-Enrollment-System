@@ -138,6 +138,259 @@ class Course {
     }
 
     /**
+     * Admin courses table config.
+     *
+     * @return array
+     */
+    public function getAdminCoursesTableConfig() {
+        return [
+            'table' => '
+                courses c
+                left join enrollments e
+                    on e.course_id = c.id
+                    and e.status in ("active", "course_inactive")
+            ',
+            'select' => '
+                c.id as course_id,
+                c.name as course_name,
+                c.duration_weeks,
+                c.max_seats,
+                count(e.id) as filled_seats,
+                c.max_seats - count(e.id) as available_seats,
+                c.is_active as course_status
+            ',
+            'where' => '',
+            'groupBy' => '
+                c.id,
+                c.name,
+                c.duration_weeks,
+                c.max_seats,
+                c.is_active
+            ',
+            'countField' => 'DISTINCT c.id',
+            'searchable' => [
+                'c.name',
+            ],
+            'sortable' => [
+                'c.id',
+                'c.name',
+                'c.duration_weeks',
+                'c.max_seats',
+                'course_status',
+            ],
+            'defaultOrder' => 'c.id DESC',
+        ];
+    }
+
+    /**
+     * Instructor assigned courses table config.
+     *
+     * @param  int  $instructorId
+     * @return array
+     */
+    public function getInstructorCoursesTableConfig($instructorId) {
+        return [
+            'table' => '
+                courses c
+                join courses_instructors ci
+                    on ci.course_id = c.id
+                left join enrollments e
+                    on e.course_id = c.id
+                    and e.status = "active"
+            ',
+            'select' => '
+                c.id as course_id,
+                c.name as course_name,
+                c.duration_weeks,
+                c.max_seats,
+                count(e.id) as filled_seats,
+                c.max_seats - count(e.id) as available_seats,
+                c.is_active as course_status
+            ',
+            'where' => "
+                ci.instructor_id = {$instructorId}
+            ",
+            'groupBy' => '
+                c.id,
+                c.name,
+                c.duration_weeks,
+                c.max_seats,
+                c.is_active
+            ',
+            'countField' => 'DISTINCT c.id',
+            'searchable' => [
+                'c.name',
+            ],
+            'sortable' => [
+                'c.id',
+                'c.name',
+                'c.duration_weeks',
+                'c.max_seats',
+                'course_status',
+            ],
+            'defaultOrder' => 'c.id DESC',
+        ];
+    }
+
+    /**
+     * Student enrolled courses table config.
+     *
+     * @param  int  $studentId
+     * @return array
+     */
+    public function getStudentCoursesTableConfig($studentId) {
+        return [
+            'table' => '
+                enrollments e
+                join courses c on e.course_id = c.id
+                join instructors i on e.instructor_id = i.user_id
+            ',
+            'select' => '
+                c.id as course_id,
+                c.name as course_name,
+                c.duration_weeks,
+                c.max_seats,
+                c.is_active as course_status,
+                e.id as enrollment_id,
+                e.enrolled_date,
+                e.status as enrollment_status,
+                i.user_id as instructor_id,
+                i.name as instructor_name
+            ',
+            'where' => "
+                e.student_id = {$studentId}
+            ",
+            'searchable' => [
+                'c.name',
+                'i.name',
+            ],
+            'sortable' => [
+                'course_id',
+                'course_name',
+                'duration_weeks',
+                'enrolled_date',
+                'enrollment_status',
+            ],
+            'defaultOrder' => '
+                e.enrolled_date DESC,
+                e.id DESC
+            ',
+        ];
+    }
+
+    /**
+     * Available courses table config.
+     *
+     * @param  int  $studentId
+     * @return array
+     */
+    public function getAvailableCoursesTableConfig($studentId) {
+        $studentId = (int) $studentId;
+        return [
+            'table' => '
+                courses c
+                left join (
+                    select ci.course_id, min(i.user_id) as instructor_id, min(i.name) as instructor_name
+                    from courses_instructors ci
+                    join instructors i on ci.instructor_id = i.user_id
+                    group by ci.course_id
+                ) i on i.course_id = c.id
+                left join enrollments e
+                    on e.course_id = c.id
+                    and e.status in ("active", "course_inactive")
+            ',
+            'select' => '
+                c.id as course_id,
+                c.name as course_name,
+                c.duration_weeks,
+                c.max_seats,
+                c.is_active as course_status,
+                count(e.id) as filled_seats,
+                c.max_seats - count(e.id) as available_seats,
+                i.instructor_id,
+                i.instructor_name
+            ',
+            'where' => "
+                c.is_active = 'active'
+                and not exists (
+                    select 1
+                    from enrollments se
+                    where se.course_id = c.id
+                    and se.student_id = {$studentId}
+                    and se.status in (
+                        'requested',
+                        'active',
+                        'completed',
+                        'course_inactive'
+                    )
+                )
+            ",
+            'groupBy' => '
+                c.id,
+                c.name,
+                c.duration_weeks,
+                c.max_seats,
+                c.is_active,
+                i.instructor_id,
+                i.instructor_name
+            ',
+            'countField' => 'c.id',
+            'searchable' => [
+                'c.name',
+                'i.name',
+            ],
+            'sortable' => [
+                'course_id',
+                'course_name',
+                'duration_weeks',
+                'max_seats',
+                'filled_seats',
+                'available_seats',
+                'instructor_name',
+            ],
+            'defaultOrder' => '
+                c.id DESC,
+                i.name ASC
+            ',
+        ];
+    }
+
+    /**
+     * Assigned courses table config for DataTables.
+     *
+     * @return array
+     */
+    public function getAssignedCoursesTableConfig() {
+        return [
+            'table' => '
+                courses_instructors ci
+                join courses c on ci.course_id = c.id
+                join instructors i on ci.instructor_id = i.user_id
+            ',
+            'select' => '
+                c.id as course_id,
+                c.name as course_name,
+                i.user_id as instructor_id,
+                i.name as instructor_name
+            ',
+            'where' => '',
+            'searchable' => [
+                'c.name',
+                'i.name',
+            ],
+            'sortable' => [
+                'course_id',
+                'course_name',
+                'instructor_id',
+                'instructor_name',
+            ],
+            'defaultOrder' => '
+                c.id DESC
+            ',
+        ];
+    }
+
+    /**
      * Get course by ID.
      *
      * @param  int  $courseId

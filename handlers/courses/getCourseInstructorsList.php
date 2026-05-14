@@ -4,6 +4,8 @@ session_start();
 header('Content-Type: application/json');
 
 require_once __DIR__.'/../../config/init.php';
+require_once __DIR__.'/../../service/CourseService.php';
+require_once __DIR__.'/../../helpers/Logger.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     echo json_encode(Result::fail(MSG_INVALID_METHOD));
@@ -28,16 +30,18 @@ if (AuthHelper::isInstructor() && ! $course->hasInstructor($courseId, $_SESSION[
 }
 
 try {
-    $result = $instructor->getInstructorsByCourse($courseId);
+    $courseService = new CourseService($conn);
+    $result = $courseService->getCourseInstructorsTable($courseId);
 
-    echo json_encode(Result::success('Course instructors fetched', [
-        'instructors' => $result['data'] ?? [],
-        'courseId' => $courseId,
-        'isAdmin' => AuthHelper::isAdmin(),
-    ]));
+    if (! $result['status']) {
+        throw new Exception($result['message']);
+    }
+
+    echo json_encode($result['data']);
 
 } catch (Throwable $e) {
-    echo json_encode(Result::fail('Server error', $e->getMessage()));
+    Logger::error($e, 'Course Instructors List');
+    echo json_encode(Result::fail(MSG_UNEXPECTED_ERROR));
 }
 
 exit;

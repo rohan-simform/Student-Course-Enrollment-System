@@ -17,10 +17,14 @@ try {
 
     $email = Validator::email($_POST['email'] ?? null);
     $password = $_POST['password'] ?? '';
-    $captcha = $_POST['captcha'];
+    $captcha = $_POST['captcha'] ?? '';
 
     if ($password === '') {
         throw new Exception('Password is required');
+    }
+
+    if ($captcha === '') {
+        throw new Exception('Captcha is required');
     }
 
 } catch (Exception $e) {

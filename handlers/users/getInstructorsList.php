@@ -3,43 +3,31 @@
 session_start();
 header('Content-Type: application/json');
 
-require_once __DIR__.'/../../config/init.php';
-require_once __DIR__.'/../../service/UserService.php';
+require_once __DIR__ . '/../../config/init.php';
+require_once __DIR__ . '/../../service/UserService.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    echo json_encode(Result::fail(MSG_INVALID_METHOD));
+    echo json_encode(['error' => MSG_INVALID_METHOD]);
     exit;
 }
 
-if (! AuthHelper::isAdmin()) {
-    echo json_encode(Result::fail(MSG_UNAUTHORIZED));
-    exit;
-}
-
-try {
-    $page = Validator::integer($_GET['page'] ?? null, 'page', 1);
-    $limit = Validator::integer($_GET['limit'] ?? 10, 'limit', 1);
-} catch (Exception $e) {
-    echo json_encode(Result::fail(MSG_VALIDATION_FAILED, $e->getMessage()));
+if (!AuthHelper::isAdmin()) {
+    echo json_encode(['error' => MSG_UNAUTHORIZED]);
     exit;
 }
 
 $userService = new UserService($conn);
 
 try {
-    $result = $userService->getUsers('instructor', $page, $limit);
-
-    if (! $result) {
-        throw new Exception('Fetch failed');
+    $result = $userService->getUsersTable(ROLE_INSTRUCTOR);
+    if ($result['status']) {
+        echo json_encode($result['data']);
+    } else {
+        echo json_encode(['error' => $result['message']]);
     }
-
-    echo json_encode(Result::success('Instructors fetched', [
-        'instructors' => $result['data']['data'] ?? [],
-        'pagination' => $result['data']['pagination'] ?? [],
-    ]));
-
 } catch (Throwable $e) {
-    echo json_encode(Result::fail('Server error', $e->getMessage()));
+    Logger::error($e, 'Instructors Table');
+    echo json_encode(['error' => MSG_UNEXPECTED_ERROR]);
 }
 
 exit;

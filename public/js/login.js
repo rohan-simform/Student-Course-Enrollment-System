@@ -5,7 +5,6 @@ $(document).ready(function () {
     const $captchaImg = $('#captcha-img');
     const $refreshCaptchaBtn = $('#refreshCaptchaBtn');
 
-    // Refresh captcha button click
     $refreshCaptchaBtn.on('click', function () {
         refreshCaptcha();
     });
@@ -14,76 +13,67 @@ $(document).ready(function () {
 
         e.preventDefault();
 
-        const formData = new FormData(this);
+        const $this = $(this);
 
-        const email = $('#email').val().trim();
-        const password = $('#password').val().trim();
-        const captcha = $('#captcha').val().trim();
-
-        if (email === '') {
-            alert('Email is required');
+        try {
+            Validator.email($('#email').val());
+            Validator.password($('#password').val());
+        } catch (err) {
+            alert(err.message);
             return;
         }
-
-        if (password === '') {
-            alert('Password is required');
-            return;
-        }
-
-        // if (captcha === '') {
-        //     alert('Captcha is required');
-        //     return;
-        // }
 
         $submitBtn.prop('disabled', true);
-        $submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Logging in...');
 
         $.ajax({
-            url: $form.attr('action'),
+            url: $this.attr('action'),
             type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
+            data: $this.serialize(),
             dataType: 'json',
 
-            success: function (result) {
+            success: function (response) {
 
-                console.log(result);
+                let message = response.message;
 
-                if (!result.status) {
+                if (!response.status && response.error) {
+                    message = response.error;
+                }
 
-                    alert(result.message || 'Login failed');
+                alert(message);
 
+                if (!response.status) {
                     refreshCaptcha();
-
                     return;
                 }
 
-                if (result.redirect) {
-                    window.location.href = result.redirect;
+                if (response.redirect) {
+                    window.location.href = response.redirect;
                     return;
                 }
-                window.location.reload();
+
+                window.location.href = 'index.php';
             },
 
-            error: function (xhr, status, error) {
+            error: function (xhr) {
 
-                console.error(error);
+                let message = 'Something went wrong';
 
-                alert('Something went wrong. Please try again.');
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
 
+                alert(message);
                 refreshCaptcha();
             },
 
             complete: function () {
                 $submitBtn.prop('disabled', false);
-                $submitBtn.html('<i class="fas fa-sign-in-alt"></i> Login');
             }
         });
     });
 
     function refreshCaptcha() {
-        $captchaImg.attr('src','/handlers/auth/captcha.php?' + Date.now());
+        $captchaImg.attr('src', '/handlers/auth/captcha.php?' + Date.now());
         $('#captcha').val('');
     }
 });

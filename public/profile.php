@@ -55,6 +55,7 @@
     </div>
 
     <script defer src="./js/config.php"></script>
+    <script defer src="/public/js/validator.js"></script>
     <script defer src="./js/functions.js"></script>
     <script defer src="./js/profile.js"></script>
 

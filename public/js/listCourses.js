@@ -1,167 +1,137 @@
-let currentPage = 1;
-let limit = 10;
+let coursesTable = null;
 let currentUserRole = null;
 
-function loadCourses(page = 1) {
+$(document).ready(function () {
+    getCurrentUserInfo();
+});
 
-    currentPage = page;
-
+function getCurrentUserInfo() {
     $.ajax({
-        url: APP.baseUrl + `courses/getCoursesList.php?page=${page}&limit=${limit}`,
+        url: APP.baseUrl + 'auth/getCurrentUser.php',
         type: 'GET',
         dataType: 'json',
-
         success: function (data) {
-
-            if (!data.status) {
-                alert(data.message);
-                return;
+            if (data.status) {
+                currentUserRole = data.data.role;
+                initializeDataTable();
             }
-
-            renderTable(data.data.courses);
-            renderPagination(data.data.pagination, loadCourses);
         },
-
         error: function (xhr, status, error) {
-
-            console.error(error);
-
-            alert('Failed to load courses');
+            console.error('Failed to fetch current user', error);
         }
     });
 }
 
-function updateTableHeaders() {
+function initializeDataTable() {
+    let columns;
 
     if (currentUserRole === 'student') {
-
-        $('#tableHead').html(`
-            <tr>
-                <th>Course</th>
-                <th>Instructor</th>
-                <th>Duration</th>
-                <th>Enrolled Date</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
+        $('#coursesTable thead tr').html(`
+            <th>Course Name</th>
+            <th>Instructor</th>
+            <th>Duration</th>
+            <th>Enrolled Date</th>
+            <th>Status</th>
+            <th>Action</th>
         `);
 
-        $('#courseTitle').text('My Courses');
+        columns = [
+            { data: 'course_name' },
+            { data: 'instructor_name' },
+            { data: 'duration_weeks' },
+            { data: 'enrolled_date' },
+            { data: 'enrollment_status' },
+            {
+                data: 'course_id',
+                orderable: false,
+                searchable: false,
+                render: function (data, type, row) {
+                    let actions = `
+                        <div class="action-buttons">
+                            <button class="action-btn btn-view" onclick="viewCourseDetails(${row.course_id}, ${row.enrollment_id})">
+                                <i class="fas fa-eye"></i> Details
+                            </button>
+                    `;
 
+                    if (row.enrollment_status === 'requested') {
+                        actions += `
+                            <button class="action-btn btn-reject" onclick="withdrawRequest(${row.enrollment_id})">
+                                <i class="fas fa-times"></i> Withdraw
+                            </button>
+                        `;
+                    }
+
+                    actions += `</div>`;
+                    return actions;
+                }
+            }
+        ];
     } else {
-
-        $('#tableHead').html(`
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Duration</th>
-                <th>Available Seats</th>
-                <th>Max Seats</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
+        $('#coursesTable thead tr').html(`
+            <th>ID</th>
+            <th>Name</th>
+            <th>Duration</th>
+            <th>Available Seats</th>
+            <th>Max Seats</th>
+            <th>Status</th>
+            <th>Action</th>
         `);
 
-        $('#courseTitle').text('Courses');
+        columns = [
+            { data: 'course_id' },
+            { data: 'course_name' },
+            { data: 'duration_weeks' },
+            { data: 'available_seats' },
+            { data: 'max_seats' },
+            { data: 'course_status' },
+            {
+                data: 'course_id',
+                orderable: false,
+                searchable: false,
+                render: function (data, type, row) {
+                    let actions = `
+                        <div class="action-buttons">
+                            <button class="action-btn btn-edit" onclick="editCourse(${row.course_id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                    `;
+
+                    if (currentUserRole === 'admin') {
+                        actions += `
+                            <button class="action-btn btn-delete" onclick="deleteCourse(${row.course_id})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        `;
+                    }
+
+                    actions += `
+                            <button class="action-btn btn-view" onclick="viewCourseStudents(${row.course_id})">
+                                <i class="fas fa-users"></i> Students
+                            </button>
+                            <button class="action-btn btn-view" onclick="viewCourseInstructors(${row.course_id})">
+                                <i class="fas fa-chalkboard-user"></i> Instructors
+                            </button>
+                        </div>
+                    `;
+                    return actions;
+                }
+            }
+        ];
     }
+
+    coursesTable = initTable(
+        'coursesTable',
+        columns,
+        null,
+        APP.baseUrl + 'courses/getCoursesList.php'
+    );
 }
 
-function renderTable(courses) {
-
-    const $tbody = $('#courseTableBody');
-
-    $tbody.html('');
-
-    if (currentUserRole === 'student') {
-        renderStudentView(courses, $tbody);
-    } else {
-        renderAdminInstructorView(courses, $tbody);
-    }
-}
-
-function renderStudentView(courses, $tbody) {
-    console.log(courses);
-
-    $.each(courses, function (index, course) {
-
-        let actionButtons = `
-            <div class="action-buttons">
-                <button class="action-btn btn-view" onclick="viewCourseDetails(${course.course_id},${course.enrollment_id})">
-                    <i class="fas fa-eye"></i> Details
-                </button>
-        `;
-
-        if (course.enrollment_status === 'requested') {
-
-            actionButtons += `
-                <button class="action-btn btn-reject" onclick="withdrawRequest(${course.enrollment_id})">
-                    <i class="fas fa-times"></i> Withdraw
-                </button>
-            `;
-        }
-
-        actionButtons += `</div>`;
-
-        $tbody.append(`
-            <tr>
-                <td>${course.course_id} - ${escapeHtml(course.course_name)}</td>
-                <td>${course.instructor_id} - ${escapeHtml(course.instructor_name)}</td>
-                <td>${course.duration_weeks} Weeks</td>
-                <td>${escapeHtml(course.enrolled_date)}</td>
-                <td>${course.enrollment_status.charAt(0).toUpperCase() + course.enrollment_status.slice(1)}</td>
-                <td>${actionButtons}</td>
-            </tr>
-        `);
-    });
-}
-
-function renderAdminInstructorView(courses, $tbody) {
-
-    $.each(courses, function (index, course) {
-
-        $tbody.append(`
-            <tr>
-                <td>${course.course_id}</td>
-                <td>${escapeHtml(course.course_name)}</td>
-                <td>${course.duration_weeks} Weeks</td>
-                <td>${course.available_seats}</td>
-                <td>${course.max_seats}</td>
-                <td>${course.course_status}</td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="action-btn btn-edit" onclick="editCourse(${course.course_id})">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-
-                        ${currentUserRole === 'admin'
-                            ? `
-                                <button class="action-btn btn-delete" onclick="deleteCourse(${course.course_id})">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            `
-                            : ''
-                        }
-
-                        <button class="action-btn btn-view" onclick="viewCourseStudents(${course.course_id})">
-                            <i class="fas fa-users"></i> Students
-                        </button>
-
-                        <button class="action-btn btn-view" onclick="viewCourseInstructors(${course.course_id})">
-                            <i class="fas fa-chalkboard-user"></i> Instructors
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `);
-    });
-}
-
-function viewCourseDetails(courseId,enrollmentId) {
+function viewCourseDetails(courseId, enrollmentId) {
     window.location.href = `courseDetails.php?course_id=${courseId}&enrollment_id=${enrollmentId}`;
 }
 
 function withdrawRequest(enrollmentId) {
-
     if (!confirm('Withdraw enrollment request?')) {
         return;
     }
@@ -169,30 +139,19 @@ function withdrawRequest(enrollmentId) {
     $.ajax({
         url: APP.baseUrl + 'enrollments/withdrawEnrollmentRequest.php',
         type: 'POST',
-
-        data: {
-            id: enrollmentId
-        },
-
+        data: { id: enrollmentId },
         dataType: 'json',
-
         success: function (response) {
-
             alert(response.message);
-
-            if (response.status) {
-                loadCourses(currentPage);
+            if (response.status && coursesTable) {
+                coursesTable.ajax.reload();
             }
         },
-
         error: function (xhr) {
-
             let message = 'Something went wrong';
-
             if (xhr.responseJSON?.message) {
                 message = xhr.responseJSON.message;
             }
-
             alert(message);
         }
     });
@@ -203,7 +162,6 @@ function editCourse(id) {
 }
 
 function deleteCourse(courseId) {
-
     if (!confirm('Deactivate this course?')) {
         return;
     }
@@ -211,30 +169,19 @@ function deleteCourse(courseId) {
     $.ajax({
         url: APP.baseUrl + 'courses/deleteCourse.php',
         type: 'POST',
-
-        data: {
-            course_id: courseId
-        },
-
+        data: { course_id: courseId },
         dataType: 'json',
-
         success: function (response) {
-
             alert(response.message);
-
-            if (response.status) {
-                loadCourses(currentPage);
+            if (response.status && coursesTable) {
+                coursesTable.ajax.reload();
             }
         },
-
         error: function (xhr) {
-
             let message = 'Something went wrong';
-
             if (xhr.responseJSON?.message) {
                 message = xhr.responseJSON.message;
             }
-
             alert(message);
         }
     });
@@ -246,39 +193,4 @@ function viewCourseStudents(courseId) {
 
 function viewCourseInstructors(courseId) {
     window.location.href = `courseInstructors.php?course_id=${courseId}`;
-}
-
-$(document).ready(function () {
-
-    getCurrentUserInfo();
-});
-
-function getCurrentUserInfo() {
-
-    $.ajax({
-        url: APP.baseUrl + 'auth/getCurrentUser.php',
-        type: 'GET',
-        dataType: 'json',
-
-        success: function (data) {
-
-            if (data.status) {
-
-                currentUserRole = data.data.role;
-
-                updateTableHeaders();
-
-                // LOAD AFTER ROLE IS READY
-                loadCourses();
-            }
-        },
-
-        error: function (xhr, status, error) {
-
-            console.error(
-                'Failed to fetch current user',
-                error
-            );
-        }
-    });
 }

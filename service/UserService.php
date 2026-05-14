@@ -7,6 +7,7 @@ require_once __DIR__.'/../helpers/Permission.php';
 require_once __DIR__.'/../service/MailService.php';
 require_once __DIR__.'/../helpers/Result.php';
 require_once __DIR__.'/../helpers/Logger.php';
+require_once __DIR__.'/../helpers/DataTableHelper.php';
 
 /**
  * Handles user business logic and permissions.
@@ -89,6 +90,40 @@ class UserService {
         }
     }
 
+    public function getUsersTable($role = null) {
+        if (! Permission::check('user.read')) {
+            return Result::fail(MSG_UNAUTHORIZED);
+        }
+
+        try {
+
+            if ($role === ROLE_STUDENT) {
+                $config = $this->student->getTableConfig();
+
+            } elseif ($role === ROLE_INSTRUCTOR) {
+                $config = $this->instructor->getTableConfig();
+
+            } else {
+                $config = $this->user->getUsersQuery($role);
+            }
+
+            return Result::success(
+                '',
+                DataTableHelper::make(
+                    $this->conn,
+                    $config,
+                    $_GET
+                )
+            );
+
+        } catch (Throwable $e) {
+
+            Logger::error($e, 'User DataTable');
+
+            return Result::fail(MSG_UNEXPECTED_ERROR);
+        }
+    }
+
     /**
      * Get user profile details.
      *
@@ -140,6 +175,8 @@ class UserService {
 
         try {
             $this->conn->begin_transaction();
+
+            $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT); 
 
             $userId = $this->user->create($role, $data['email'], $data['password']);
 
@@ -236,6 +273,11 @@ class UserService {
             $total = 0;
 
             $accountData = array_intersect_key($data, array_flip(['email', 'password', 'status']));
+
+            if (isset($accountData['password'])) {
+                $accountData['password'] = password_hash($accountData['password'], PASSWORD_DEFAULT);
+            }
+
             if (! empty($accountData)) {
                 $total += $this->user->update($userId, $accountData);
             }

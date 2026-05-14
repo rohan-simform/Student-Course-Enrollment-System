@@ -4,6 +4,7 @@ session_start();
 header('Content-Type: application/json');
 
 require_once __DIR__.'/../../config/init.php';
+require_once __DIR__.'/../../service/EnrollmentService.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     echo json_encode(Result::fail(MSG_INVALID_METHOD));
@@ -16,8 +17,6 @@ if (! AuthHelper::isAdmin() && ! AuthHelper::isInstructor()) {
 }
 
 $courseId = isset($_GET['course_id']) ? (int) $_GET['course_id'] : 0;
-$page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
-$limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
 
 if ($courseId <= 0) {
     echo json_encode(Result::fail('Invalid course ID'));
@@ -30,16 +29,18 @@ if (AuthHelper::isInstructor() && ! $course->hasInstructor($courseId, $_SESSION[
 }
 
 try {
-    $result = $enrollment->getEnrollments('course_id', $courseId, $page, $limit);
+    $enrollmentService = new EnrollmentService($conn);
+    $result = $enrollmentService->getCourseStudentsTable($courseId);
 
-    echo json_encode(Result::success('Course students fetched', [
-        'students' => $result['data'] ?? [],
-        'pagination' => $result['pagination'] ?? [],
-        'courseId' => $courseId,
-    ]));
+    if (! $result['status']) {
+        throw new Exception($result['message']);
+    }
+
+    echo json_encode($result['data']);
 
 } catch (Throwable $e) {
-    echo json_encode(Result::fail('Server error', $e->getMessage()));
+    Logger::error($e, 'Course Students List');
+    echo json_encode(Result::fail(MSG_UNEXPECTED_ERROR));
 }
 
 exit;

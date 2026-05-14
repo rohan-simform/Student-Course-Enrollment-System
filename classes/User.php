@@ -87,6 +87,112 @@ class User {
         ];
     }
 
+    public function getUsersQuery($role = null) {
+        if ($role === ROLE_STUDENT) {
+            return [
+                'table' => '
+                    users u
+                    join students s on u.id = s.user_id
+                ',
+                'select' => '
+                    u.id,
+                    u.email,
+                    u.role,
+                    u.status,
+                    s.name,
+                    s.phone,
+                    s.enrolled_on
+                ',
+                'where' => "u.role = 'student'",
+                'searchable' => [
+                    'u.email',
+                    's.name',
+                    's.phone',
+                ],
+                'sortable' => [
+                    'u.id',
+                    'u.email',
+                    's.name',
+                    'u.status',
+                    's.enrolled_on',
+                ],
+                'defaultOrder' => 'u.id DESC',
+            ];
+        } elseif ($role === ROLE_INSTRUCTOR) {
+            return [
+                'table' => '
+                    users u join instructors i on u.id = i.user_id
+                ',
+                'select' => '
+                    u.id,
+                    u.email,
+                    u.role,
+                    u.status,
+                    i.name,
+                    i.phone,
+                    i.salary
+                ',
+                'where' => "u.role = 'instructor'",
+                'searchable' => [
+                    'u.email',
+                    'i.name',
+                    'i.phone',
+                ],
+                'sortable' => [
+                    'u.id',
+                    'u.email',
+                    'i.name',
+                    'u.status',
+                    'i.salary',
+                ],
+                'defaultOrder' => 'u.id DESC',
+            ];
+        } elseif ($role === ROLE_ADMIN) {
+            return [
+                'table' => 'users u',
+                'select' => '
+                    u.id,
+                    u.email,
+                    u.role,
+                    u.status
+                ',
+                'where' => "u.role = 'admin'",
+                'searchable' => [
+                    'u.email',
+                ],
+                'sortable' => [
+                    'u.id',
+                    'u.email',
+                    'u.status',
+                ],
+                'defaultOrder' => 'u.id DESC',
+            ];
+        } elseif ($role === null) {
+            return [
+                'table' => 'users u',
+                'select' => '
+                    u.id,
+                    u.email,
+                    u.role,
+                    u.status
+                ',
+                'where' => '',
+                'searchable' => [
+                    'u.email',
+                    'u.role',
+                ],
+                'sortable' => [
+                    'u.id',
+                    'u.email',
+                    'u.role',
+                    'u.status',
+                ],
+                'defaultOrder' => 'u.id DESC',
+            ];
+        }
+        return false;
+    }
+
     /**
      * Get user by ID.
      *
