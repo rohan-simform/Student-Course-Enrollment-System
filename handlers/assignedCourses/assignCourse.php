@@ -31,9 +31,4 @@ try {
 $courseService = new CourseService($conn);
 $result = $courseService->assignCourse($courseId, $instructorId);
 
-// if ($result['status']) {
-//     echo "<script>alert('".$result['message']."'); window.location='../public/listAssignedCourse.php';</script>";
-// } else {
-//     echo "<script>alert('".$result['message']."'); window.history.back();</script>";
-// }
 echo json_encode($result);
