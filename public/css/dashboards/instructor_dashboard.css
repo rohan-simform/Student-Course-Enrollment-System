@@ -1,0 +1,65 @@
+/* Instructor Dashboard Specific Styles */
+
+.course-list-item {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s ease;
+}
+
+.course-list-item:last-child {
+    border-bottom: none;
+}
+
+.course-list-item:hover {
+    background-color: #f8f9fa;
+}
+
+.course-info {
+    flex: 1;
+}
+
+.course-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.course-meta {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.instructor-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.stat-box {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.stat-box i {
+    font-size: 28px;
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.stat-box h4 {
+    font-size: 22px;
+    font-weight: bold;
+    margin: 10px 0 5px 0;
+}
+
+.stat-box p {
+    font-size: 12px;
+    color: #6c757d;
+    margin: 0;
+}

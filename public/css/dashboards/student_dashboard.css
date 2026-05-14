@@ -1,0 +1,54 @@
+/* Student Dashboard Specific Styles */
+
+.enrollment-status-badge {
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.enrollment-status-badge.active {
+    background-color: #28a745;
+    color: white;
+}
+
+.enrollment-status-badge.pending {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.enrollment-status-badge.completed {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.course-card {
+    border-left: 4px solid #667eea;
+}
+
+.course-card:hover {
+    border-left-color: #764ba2;
+}
+
+.progress-stats {
+    display: flex;
+    justify-content: space-around;
+    padding: 15px 0;
+    border-top: 1px solid #e9ecef;
+}
+
+.progress-stats-item {
+    text-align: center;
+}
+
+.progress-stats-item .stat-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.progress-stats-item .stat-label {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 5px;
+}
